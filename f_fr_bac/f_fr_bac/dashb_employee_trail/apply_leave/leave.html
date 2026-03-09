@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./leave.css">
+    <link rel="stylesheet" href="../employee_page/employee.css">
+</head>
+<body>
+
+    <div class="app-layout">
+      <!-- SIDEBAR -->
+      <aside class="sidebar" id="sidebar">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+          <!-- 1. NEW LOGO SECTION -->
+          <div class="sidebar-logo">
+            <!-- Replace src with your actual logo URL -->
+            <img src="../assets/opptylogo.png" alt="Company Logo" />
+          </div>
+
+          <!-- User Profile -->
+          <div class="header-profile">
+            <div class="user-name" id="name">Dhamodhar</div>
+            <div class="user-role" id="role">Admin</div>
+          </div>
+
+          <!-- Toggle Button -->
+          <button id="sidebarToggle" class="sidebar-toggle">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+        </div>
+
+        <div class="sidebar-content">
+          <ul class="sidebar-menu">
+            <!-- Dashboard -->
+            <li class="menu-item">
+              <a href="../dashboard/dashboard.html" class="menu-link">
+                <div class="link-left">
+                  <i class="fa-solid fa-table-columns"></i>
+                  <span>Dashboard</span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Employees -->
+            <li class="menu-item">
+              <a href="../employee_page/employee.html" class="menu-link">
+                <div class="link-left">
+                  <i class="fa-regular fa-user"></i>
+                  <span>Employees</span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Attendance -->
+            <li class="menu-item">
+              <a href="../attendance/attendance.html" class="menu-link">
+                <div class="link-left">
+                  <i class="fa-solid fa-calendar-days"></i>
+                  <span>Attendance</span>
+                </div>
+              </a>
+            </li>
+            <li class="menu-item active">
+              <a href="../apply_leave/leave.html" class="menu-link">
+                <div class="link-left">
+                  <i class="fa-solid fa-file-signature"></i>
+                  <span>Apply Leave</span>
+                </div>
+              </a>
+            </li>   
+
+           <!-- Payslip -->
+            <li class="menu-item">
+              <a href="../payslips/payslip.html" class="menu-link">
+                <div class="link-left">
+                  <i class="fa-regular fa-credit-card"></i>
+                  <span>Payslip</span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Asset Allocation -->
+            <li class="menu-item">
+              <a href="../asset_allocation/assetallocation.html" class="menu-link">
+                <div class="link-left">
+                  <i class="fa-solid fa-phone"></i>
+                  <span>Asset Allocation</span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Documents -->
+      <li class="menu-item">
+        <a href="../documents/documents.html" class="menu-link">
+          <div class="link-left">
+            <i class="fa-solid fa-file-lines"></i>
+            <span>Documents</span>
+          </div>
+        </a>
+      </li>
+          </ul>
+        </div>
+      </aside>
+      <main class="main-content" id="mainContent">
+        <div class="container">
+          <!-- Header -->
+          <header class="page-header">
+            <div class="flex items-center gap-10">
+              <!-- Mobile Menu Button -->
+              <button id="mobileMenuBtn" class="mobile-menu-btn">
+                <i class="fa-solid fa-bars"></i>
+              </button>
+
+              <div class="page-title">
+                <h1>Apply Leave</h1>
+                <div class="breadcrumbs">
+                  <i class="fa-solid fa-house"></i> > Dashboard > Employee
+                  Leave
+                </div>
+              </div>
+            </div>
+
+            <div class="header-right">
+              <div class="search-box-wrapper">
+                <!-- Filter Dropdown -->
+                <select id="searchFilter" class="search-select">
+                  <option value="all">All</option>
+                  <option value="name">Name</option>
+                  <option value="id">ID</option>
+                  <option value="role">Role</option>
+                </select>
+
+                <!-- Divider -->
+                <div class="search-divider"></div>
+
+                <!-- Input Field -->
+                <input
+                  type="text"
+                  id="searchInput"
+                  class="search-input"
+                  placeholder="Search employee..."
+                />
+
+                <!-- Search Button -->
+                <button id="searchBtn" class="search-btn">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+              </div>
+            </div>
+          </header>
+        </div>
+
+        <!--apply leave section-->
+        <div class="card" style="width: 500px; align-items: center;  ">
+                        <div class="card-header" style="margin-top: 20px;">
+                            <span class="card-title">Leave Details</span>
+                            <button class="btn btn-outline" style="padding: 4px 8px; font-size: 10px;">2026</button>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <span>Total Leaves</span>
+                                <h4>24</h4>
+                            </div>
+                            <div class="stat-box">
+                                <span>Taken</span>
+                                <h4 id="taken"></h4>
+                            </div>
+                            <div class="stat-box">
+                                <span >Casual Leaves</span>
+                                <h4 id="casual"></h4>
+                            </div>
+                            <div class="stat-box">
+                                <span>Sick Leaves</span>
+                                <h4 id="sick"></h4>
+                            </div>
+                            <div class="stat-box">
+                                <span>Loss of pay</span>
+                                <h4 id="lop"></h4>
+                            </div>
+                            <div class="stat-box">
+                                <span>Remaining Leaves</span>
+                                <h4 id="remaining"></h4>
+                            </div>
+                        </div>
+                        <button class="btn btn-dark btn-trigger" style="width: 100%; margin-top: 80px; text-align: center; display: flex; justify-content: center; align-items: center;" >Apply New Leave</button>
+                    </div>
+                </div>
+
+                <!-- leave apply modal -->
+                 <div class="lm-modal-overlay" id="lmLeaveModal">
+    <div class="lm-modal-box">
+        <div class="lm-modal-header">
+            <h3>Add Leave Request</h3>
+            <button class="lm-close-icon" id="lmCloseBtn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="lm-modal-body">
+            <form id="lmLeaveForm">
+                <div class="lm-form-group">
+                    <label>Employee Name <span class="lm-req">*</span></label>
+                    <input type="text" id="lmEmpName" class="lm-form-control" placeholder="Enter Name"> 
+                </div>
+
+                <div class="lm-form-group">
+                    <label>Leave Type <span class="lm-req">*</span></label>
+                    <select id="lmLeaveType" class="lm-form-control">
+                        <option value="" disabled selected>Select Leave Type</option>
+                        <option value="casual">Casual Leave (12/yr)</option>
+                        <option value="medical">Medical Leave (10/yr)</option>
+                        <option value="nopay">Loss of Pay</option>
+                    </select>
+                </div>
+
+                <div class="lm-form-row">
+                    <div class="lm-form-group lm-half">
+                        <label>From Date <span class="lm-req">*</span></label>
+                        <input type="date" id="lmFromDate" class="lm-form-control">
+                    </div>
+                    <div class="lm-form-group lm-half">
+                        <label>To Date <span class="lm-req">*</span></label>
+                        <input type="date" id="lmToDate" class="lm-form-control">
+                    </div>
+                </div>
+
+                <div class="lm-form-row">
+                    <div class="lm-form-group lm-half">
+                        <label>Total Days</label>
+                        <input type="text" id="lmNumDays" class="lm-form-control lm-readonly" value="0" readonly>
+                    </div>
+                    <div class="lm-form-group lm-half">
+                        <label>Current Balance</label>
+                        <input type="text" id="lmBalance" class="lm-form-control lm-readonly lm-highlight" value="-" readonly>
+                    </div>
+                </div>
+
+                <div class="lm-form-group">
+                    <label>Reason for Leave <span class="lm-req">*</span></label>
+                    <textarea id="lmReason" class="lm-form-control" rows="3" placeholder="Enter reason here..."></textarea>
+                </div>
+
+                <div class="lm-modal-footer">
+                    <button type="button" class="lm-btn-cancel" id="lmCancelBtn">Cancel</button>
+                    <button type="submit" class="lm-btn-submit" id="lmSubmitBtn">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- SUCCESS MODAL POPUP -->
+<div class="lm-modal-overlay" id="lmSuccessModal">
+    <div class="lm-success-box">
+        <div class="lm-success-icon">
+            <i class="fa-solid fa-check"></i>
+        </div>
+        <h3>Request Submitted!</h3>
+        <p>Your leave application has been sent for approval successfully.</p>
+        <button class="lm-btn-success-close" id="lmSuccessCloseBtn">Continue</button>
+    </div>
+</div>
+
+      </main>
+    </div>
+        <script src="./leave.js"></script>
+        <!-- <script src="../employee_page/employee.js"></script> -->
+</body>
+</html>

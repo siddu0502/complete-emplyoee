@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Employee Dashboard</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="./documents.css">
+    <link rel="stylesheet" href="../employee_page/employee.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+      <!-- SIDEBAR -->
+      <aside class="sidebar" id="sidebar">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+          <!-- 1. NEW LOGO SECTION -->
+          <div class="sidebar-logo">
+            <!-- Replace src with your actual logo URL -->
+            <img src="../assets/opptylogo.png" alt="Company Logo" />
+          </div>
+
+          <!-- User Profile -->
+          <div class="header-profile">
+            <div class="user-name">Dhamodhar</div>
+            <div class="user-role">Admin</div>
+          </div>
+
+          <!-- Toggle Button -->
+          <button id="sidebarToggle" class="sidebar-toggle">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+        </div>
+
+        <div class="sidebar-content">
+          <ul class="sidebar-menu">
+            <!-- Dashboard -->
+            <li class="menu-item">
+              <a href="../dashboard/dashboard.html" class="menu-link">
+                <div class="link-left">
+                  <i class="fa-solid fa-table-columns"></i>
+                  <span>Dashboard</span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Employees -->
+            <li class="menu-item">
+              <a href="../employee_page/employee.html" class="menu-link">
+                <div class="link-left">
+                  <i class="fa-regular fa-user"></i>
+                  <span>Employees</span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Attendance -->
+            <li class="menu-item">
+              <a href="../attendance/attendance.html" class="menu-link">
+                <div class="link-left">
+                  <i class="fa-solid fa-calendar-days"></i>
+                  <span>Attendance</span>
+                </div>
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="../apply_leave/leave.html" class="menu-link">
+                <div class="link-left">
+                  <i class="fa-solid fa-file-signature"></i>
+                  <span>Apply Leave</span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Payslip -->
+            <li class="menu-item">
+              <a href="../payslips/payslip.html" class="menu-link">
+                <div class="link-left">
+                  <i class="fa-regular fa-credit-card"></i>
+                  <span>Payslip</span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Asset Allocation -->
+            <li class="menu-item">
+              <a
+                href="../asset_allocation/assetallocation.html"
+                class="menu-link"
+              >
+                <div class="link-left">
+                  <i class="fa-solid fa-phone"></i>
+                  <span>Asset Allocation</span>
+                </div>
+              </a>
+            </li>
+
+            <!-- Documents -->
+            <li class="menu-item active">
+              <a href="../documents/documents.html" class="menu-link">
+                <div class="link-left">
+                  <i class="fa-solid fa-file-lines"></i>
+                  <span>Documents</span>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </aside>
+      <!-- MAIN CONTENT -->
+      <main class="main-content" id="mainContent">
+        <div class="container">
+          <!-- Header -->
+          <header class="page-header">
+            <div class="flex items-center gap-10">
+              <!-- Mobile Menu Button -->
+              <button id="mobileMenuBtn" class="mobile-menu-btn">
+                <i class="fa-solid fa-bars"></i>
+              </button>
+
+              <div class="page-title">
+                <h1>Documents</h1>
+                <div class="breadcrumbs">
+                  <i class="fa-solid fa-house"></i> > Dashboard > Employee
+                  Documents
+                </div>
+              </div>
+            </div>
+            <!-- Right Side: Search & Filter -->
+            <div class="header-right">
+              <div class="search-box-wrapper">
+                <!-- Filter Dropdown -->
+                <select id="searchFilter" class="search-select">
+                  <option value="all">All</option>
+                  <option value="name">Name</option>
+                  <option value="id">ID</option>
+                  <option value="role">Role</option>
+                </select>
+
+                <!-- Divider -->
+                <div class="search-divider"></div>
+
+                <!-- Input Field -->
+                <input
+                  type="text"
+                  id="searchInput"
+                  class="search-input"
+                  placeholder="Search employee..."
+                />
+
+                <!-- Search Button -->
+                <button id="searchBtn" class="search-btn">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+              </div>
+            </div>
+          </header>
+
+           <!-- MAIN CONTENT AREA -->
+        <main class="doc-main-content">
+            <h2 class="doc-page-heading">Documents Repository</h2>
+
+            <!-- 1. DOCUMENT LIST SECTION -->
+            <div class="doc-content-card">
+                <div class="doc-table-wrapper">
+                    <table class="doc-data-table">
+                        <thead class="doc-table-head">
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Attachments</th>
+                            </tr>
+                        </thead>
+                        <tbody class="doc-table-body">
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2. UNIQUE UPLOAD SECTION -->
+            <div class="doc-content-card doc-upload-section">
+                <div class="doc-card-header">
+                    <h3>Upload New Document</h3>
+                    <span class="doc-required-hint">* Mandatory fields</span>
+                </div>
+                
+                <form id="docUniqueUploadForm">
+                    <div class="doc-form-row">
+                        <!-- Dropdown -->
+                        <div class="doc-input-group">
+                            <label for="docTypeSelect" class="doc-label">Document Type</label>
+                            <select id="docTypeSelect" class="doc-form-control">
+                                <option value="" disabled selected>Select type...</option>
+                                <option value="aadhar">aadhar**</option>
+                                <option value="pan">pan**</option>
+                                <option value="resume">resume</option>
+                                <option value="graduation">graduation**</option>
+                                <option value="photo">photo**</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Text Input -->
+                        <div class="doc-input-group">
+                            <label for="docDescInput" class="doc-label">Description</label>
+                            <input type="text" id="docDescInput" class="doc-form-control" placeholder="e.g. Updated PAN Card">
+                        </div>
+                    </div>
+
+                    <!-- Custom Drag & Drop Zone -->
+                    <div class="doc-input-group">
+                        <label class="doc-label">File Attachment <span class="doc-required-star">*</span></label>
+                        
+                        <div class="doc-drop-zone" id="docDropArea">
+                            <input type="file" id="docFileInput" class="doc-hidden-input" multiple>
+                            
+                            <div class="doc-upload-ui">
+                                <div class="doc-icon-circle">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </div>
+                                <div class="doc-upload-text">
+                                    <span id="docFileName">Click to browse</span> or drag file here
+                                </div>
+                                <div class="doc-upload-limit">Max size: 5MB (JPG, PNG, PDF)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="doc-action-row">
+                        <button type="submit" class="doc-btn-primary">
+                            <i class="fa-solid fa-upload"></i> Upload Files
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </main>
+
+
+        </div>
+      </main>
+    </div>
+    <script src="./documents.js"></script>
+    <!-- <script src="../employee_page/employee.js"></script> -->
+  </body>
+</html>
