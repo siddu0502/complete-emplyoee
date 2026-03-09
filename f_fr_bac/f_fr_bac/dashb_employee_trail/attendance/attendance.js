@@ -370,11 +370,11 @@ punchBtn.addEventListener("click", () => {
         .catch(err => console.error("Punch In Error:", err));
 
         // save button state
-        localStorage.setItem("attendanceStatus" + emp_id, "punched_in");
+        // localStorage.setItem("attendanceStatus" + emp_id, "punched_in");
 
         // save start time for timer
         workStartTime = Date.now();
-        localStorage.setItem("workStartTime_" + emp_id, workStartTime);
+        // localStorage.setItem("workStartTime_" + emp_id, workStartTime);
 
         punchInTimeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
@@ -392,10 +392,10 @@ punchBtn.addEventListener("click", () => {
         // PUNCH OUT
         pauseWorkTimer();
 
-        localStorage.setItem("attendanceStatus" + emp_id, "punched_out");
+        // localStorage.setItem("attendanceStatus" + emp_id, "punched_out");
 
-        // remove stored timer
-        localStorage.removeItem("workStartTime_" + emp_id);
+        // // remove stored timer
+        // localStorage.removeItem("workStartTime_" + emp_id);
 
         punchBtn.innerText = "Shift Completed";
         punchBtn.disabled = true;
@@ -414,33 +414,77 @@ punchBtn.addEventListener("click", () => {
 });
 
 
+// window.addEventListener("load", () => {
+
+//     const status = localStorage.getItem("attendanceStatus" + emp_id);
+//     const savedStart = localStorage.getItem("workStartTime_" + emp_id);
+
+//     if (status === "punched_in") {
+
+//         punchBtn.innerText = "Punch Out";
+//         isWorking = true;
+
+//         if (savedStart) {
+
+//             workStartTime = parseInt(savedStart);
+
+//             const now = Date.now();
+//             totalWorkMs = now - workStartTime;
+
+//             startWorkTimer(); // resume timer
+//         }
+//     }
+
+//     if (status === "punched_out") {
+
+//         punchBtn.innerText = "Shift Completed";
+//         punchBtn.disabled = true;
+
+//     }
+
+// });
+
+
+
 window.addEventListener("load", () => {
 
-    const status = localStorage.getItem("attendanceStatus" + emp_id);
-    const savedStart = localStorage.getItem("workStartTime_" + emp_id);
+fetch(`http://192.168.1.16:8000/api/attendence-status/${emp_id}/`)
+.then(res => res.json())
+.then(data => {
 
-    if (status === "punched_in") {
+    console.log("Attendance Status:", data);
+
+    if (data.status === "punched_in") {
 
         punchBtn.innerText = "Punch Out";
         isWorking = true;
 
-        if (savedStart) {
+        // resume timer from backend checkin
+        workStartTime = new Date(data.checkin).getTime();
 
-            workStartTime = parseInt(savedStart);
+        const now = Date.now();
+        totalWorkMs = now - workStartTime;
 
-            const now = Date.now();
-            totalWorkMs = now - workStartTime;
+        startWorkTimer();
 
-            startWorkTimer(); // resume timer
-        }
     }
 
-    if (status === "punched_out") {
+    else if (data.status === "punched_out") {
 
         punchBtn.innerText = "Shift Completed";
         punchBtn.disabled = true;
 
     }
+
+    else {
+
+        punchBtn.innerText = "Punch In";
+        isWorking = false;
+
+    }
+
+})
+.catch(err => console.error("Status fetch error:", err));
 
 });
     // ==========================================
