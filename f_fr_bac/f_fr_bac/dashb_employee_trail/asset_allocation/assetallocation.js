@@ -1,3 +1,4 @@
+const emp_id = localStorage.getItem("employee_id");
 document.addEventListener('DOMContentLoaded', () => {
     emp_id = localStorage.getItem('employee_id')
 fetch(`http://192.168.1.16:8000/api/employee/dashboard/${emp_id}/`)
@@ -92,3 +93,81 @@ fetch(`http://192.168.1.16:8000/api/employee/dashboard/${emp_id}/`)
         });
     }
 });
+function openAssetPopup(){
+        document.getElementById("assetReturnPopup").style.display="flex";
+
+    }
+    function closeAssetReturn(){
+        document.getElementById("assetReturnPopup").style.display="none";
+    }
+    function submitAssetReturn(){
+        const asset=document.getElementById("assetType").value;
+        const condition=document.getElementById("assetCondition").value;
+        const reason=document.getElementById("assetreason").value;
+        
+        if(!asset){
+            alert("please select asset");
+            return;
+        }
+        console.log(
+        {
+            asset_type:asset,
+            asset_condition:condition,
+            asset_reason:reason
+
+
+
+        })
+        alert("asset request sent succussfully")
+        document.getElementById("assetType").value=""
+        document.getElementById("assetCondition").value=""
+        document.getElementById("assetreason").value=""
+        closeAssetReturn()
+
+    }
+
+    function openAssetRequest(){
+        document.getElementById("assetRequest").style.display="flex";
+    }
+
+    function closeAssetRequest(){
+        document.getElementById("assetRequest").style.display="none";
+    }
+    function submitAssetRequest(){
+
+        
+
+    if(!emp_id){
+        alert("Employee ID not found");
+        return;
+    }
+        
+        const Asset_catagory=document.getElementById("AssetCategory").value;
+        const Asset_Des=document.getElementById("assetDes").value;
+        const Asset_loc=document.getElementById("assetLocation").value;
+
+        if(!Asset_catagory || !Asset_Des || !Asset_loc){
+            alert("Please fill all fields");
+            return;
+        }
+        fetch(`http://192.168.1.16:8000/api/employee/dashboard/${emp_id}/`)
+        .then(res => res.json())
+        .then(data => {
+            const emp_name=data.name;
+        console.log({
+            name: emp_name,
+            catagory:Asset_catagory,
+            des:Asset_Des,
+            loc:Asset_loc
+        });
+        document.getElementById("name").innerText = emp_name;
+        alert("success")
+        document.getElementById("AssetCategory").value = "";
+        document.getElementById("assetDes").value = "";
+        document.getElementById("assetLocation").value = "";
+        closeAssetRequest()
+
+
+        })
+    .catch(error => console.error("Error:", error));
+}
