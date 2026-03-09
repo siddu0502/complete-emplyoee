@@ -5,6 +5,12 @@ document.addEventListener("DOMContentLoaded", () => {
 const emp_id = localStorage.getItem('employee_id')   // ==========================================
     // 1. CONFIGURATION & STATE
     // ==========================================
+    fetch(`http://192.168.1.16:8000/api/employee/dashboard/${emp_id}/`)
+        .then(res => res.json())
+        .then(data => {
+            console.log(data)
+            document.getElementById("name").innerText = data.name;
+             document.getElementById("role").innerText = data.role;})
     const SHIFT_START_HR = 10; // 10:00 AM
     const SHIFT_END_HR = 19;   // 07:00 PM
     const TOTAL_HOURS = SHIFT_END_HR - SHIFT_START_HR; // 9 hours

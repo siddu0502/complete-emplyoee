@@ -327,8 +327,8 @@
         <div class="info-item">
             <div class="info-icon"><i class="fa-solid fa-user-tag"></i></div>
             <div class="info-content">
-                <span class="label">Username</span>
-                <div class="value editable" id="display_username"></div>
+                <span class="label">Marital Status</span>
+                <div class="value editable" id="display_marital"></div>
             </div>
         </div>
 
@@ -396,10 +396,10 @@
                 
                 <!-- Row 1 -->
                 <div class="form-row">
-                    <div class="form-group">
+                    <!-- <div class="form-group">
                         <label>Name</label>
                         <input type="text" id="input_name" class="modal-input" required>
-                    </div>
+                    </div> -->
                     <!-- <div class="form-group">
                         <label>Username</label>
                         <input type="text" id="input_username" class="modal-input">
@@ -431,6 +431,14 @@
                 </div> -->
 
                 <!-- Address Section -->
+                 <div class="form-group">
+                    <label>Marital Status</label>
+                    <select id="input_other_marital" class="modal-input">
+                        <option value="married">Married</option>
+                        <option value="unmarried">Unmarried</option>
+                        
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>Address</label>
                     <input type="text" id="input_address" class="modal-input">
@@ -706,7 +714,7 @@
                 <div class="form-group">
                     <label>Date of Birth</label>
                     <!-- Using text type so you can write "7th July" format, change to type="date" if you prefer -->
-                    <input type="text" id="input_other_dob" class="modal-input" placeholder="e.g. 7th July, 2001">
+                    <input type="text" id="input_other_dob" class="modal-input" placeholder="FORMAT:YYYY-MM-DD">
                 </div>
 
             </div>

@@ -13,17 +13,20 @@ fetch(`http://192.168.1.16:8000/api/employee/dashboard/${emp_id}/`)
               document.getElementById("email").innerText = data.email;
               
                 document.getElementById("display_dob").innerText = data.other_details[0].dob;
+                 document.getElementById("display_marital").innerText = data.other_details[0].marital_status;
                 document.getElementById("display_number").innerText = data.other_details[0].mobile;
                 document.getElementById("display_role").innerText = data.role;
                 document.getElementById("display_salary").innerText = data.salary;
                 document.getElementById("display_address").innerText = data.other_details[0].address;
                 document.getElementById("display_city").innerText = data.other_details[0].city;
+
+               if(data.bank_details && data.bank_details.length > 0){
                 document.getElementById("bankname").innerText = data.bank_details[0].bank_name;
                 document.getElementById("accno").innerText = data.bank_details[0].acc_no;
                 document.getElementById("ifsccode").innerText = data.bank_details[0].ifsc_code;
 
-
-
+                }
+                
                 document.getElementById("display_other_phone").innerText = data.other_details[0].mobile
                 document.getElementById("display_other_gender").innerText = data.other_details[0].Gender
                 document.getElementById("display_other_dob").innerText = data.other_details[0].dob
@@ -101,7 +104,7 @@ fetch(`http://192.168.1.16:8000/api/employee/dashboard/${emp_id}/`)
     const dispCity = document.getElementById("display_city");
 
     // Input Fields (Write data to here)
-    const inputName = document.getElementById("input_name");
+   
     // const inputUser = document.getElementById("input_username");
     const inputNumber = document.getElementById("input_number");
     const inputDob = document.getElementById("input_dob");
@@ -114,7 +117,7 @@ fetch(`http://192.168.1.16:8000/api/employee/dashboard/${emp_id}/`)
     if (profileOpenBtn) {
         profileOpenBtn.addEventListener("click", () => {
             // Fill inputs with current values
-            if(inputName) inputName.value = dispName.innerText;
+            // if(inputName) inputName.value = dispName.innerText;
             // if(inputUser) inputUser.value = dispUser.innerText;
             if(inputNumber) inputNumber.value = dispNumber.innerText;
             if(inputDob) inputDob.value = dispDob.innerText;
@@ -150,28 +153,28 @@ fetch(`http://192.168.1.16:8000/api/employee/dashboard/${emp_id}/`)
             // if(dispAddress) dispAddress.innerText = inputAddress.value;
             // if(dispCity) dispCity.innerText = inputCity.value;
             const profileData = {
-        name:document.getElementById('input_name').value,
         mobile: document.getElementById('input_number').value,
         dob: document.getElementById('input_dob').value,
+        marital_status : document.getElementById('input_other_marital').value,
         address: document.getElementById('input_address').value,
         city: document.getElementById('input_city').value
     };
 
-    // fetch(`http://127.0.0.1:8000/api/update-employee/${emp_id}/`, {
-    //     method: "PATCH",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify(profileData)
-    // })
-    // .then(res => res.json())
-    // .then(data => {
-    //     console.log("Profile update response:", data);
-    //     if (data.profile) alert("Profile updated successfully!");
-    //     else if (data.profile_errors) alert(JSON.stringify(data.profile_errors));
-    // })
-    // .catch(err => {
-    //     console.error("Profile update error:", err);
-    //     alert("Failed to update profile.");
-    // });
+    fetch(`http://127.0.0.1:8000/api/update-employee/${emp_id}/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profileData)
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("Profile update response:", data);
+        if (data.profile) alert("Profile updated successfully!");
+        else if (data.profile_errors) alert(JSON.stringify(data.profile_errors));
+    })
+    .catch(err => {
+        console.error("Profile update error:", err);
+        alert("Failed to update profile.");
+    });
 
             closeProfileModalFunc();
             showToast();
@@ -356,7 +359,7 @@ document.addEventListener("DOMContentLoaded", function () {
 // profile_update.addEventListener('submit',function (event) {
 //      event.preventDefault();
 //     const profileData = {
-//         name:document.getElementById('input_name').value,
+//       
 //         mobile: document.getElementById('input_number').value,
 //         dob: document.getElementById('input_dob').value,
 //         address: document.getElementById('input_address').value,

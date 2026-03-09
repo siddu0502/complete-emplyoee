@@ -1,6 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
     const emp_id = localStorage.getItem('employee_id')
     console.log(emp_id)
+   fetch(`http://192.168.1.16:8000/api/employee/dashboard/${emp_id}/`)
+        .then(res => res.json())
+        .then(data => {
+            console.log(data)
+            document.getElementById("name").innerText = data.name;
+            document.getElementById("role").innerText = data.role;})
     // const formData = new FormData();
 
     // formData.append("aadhar_card", document.getElementById("aadhar").files[0]);
