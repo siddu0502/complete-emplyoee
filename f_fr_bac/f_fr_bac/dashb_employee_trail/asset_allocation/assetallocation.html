@@ -177,7 +177,7 @@
                     <h1>Asset Allocation</h1>
                     <p>Track your devices and request new equipment.</p>
                 </div>
-                <button class="ast-btn-primary">
+                <button class="ast-btn-primary" onclick="openAssetRequest()">
                     <i class="fa-solid fa-plus"></i> Request Asset
                 </button>
             </div>
@@ -198,14 +198,14 @@
                                 <option value="Accessory">Accessory</option>
                             </select>
                         </div>
-                        <div class="ast-input-group">
+                        <!-- <div class="ast-input-group">
                             <label>Condition</label>
                             <select class="ast-select">
                                 <option value="any">Any Condition</option>
                                 <option value="good">Good</option>
                                 <option value="damaged">Damaged</option>
                             </select>
-                        </div>
+                        </div> -->
                     </div>
 
                     <!-- Asset Table -->
@@ -297,7 +297,75 @@
                             <div class="ast-icon-circle bg-white-glass"><i class="fa-solid fa-box-open"></i></div>
                         </div>
                         <p style="color: #cbd5e1;">Initiate return process for damaged or old devices.</p>
-                        <button class="ast-btn-outline-white">Start Return</button>
+                        <button class="ast-btn-outline-white" onclick="openAssetPopup()">Start Return</button>
+                    </div>
+                    <div class="popup-overlay" id="assetReturnPopup">
+                    <div class="popup-box">
+                      <h3>Return Company Assets</h3>
+
+                      <label>Asset Type</label>
+
+                      <select id="assetType">
+                        <option value="">Select Asset</option>
+                        <option value="all">All</option>
+                        <option value="laptop">Laptop</option>
+                        <option value="mouse">Mouse</option>
+                        <option value="charger">Charger</option>
+                        <option value="keyboard">Keyboard</option>
+                        <option value="idcard">ID Card</option>
+                        <option value="headset">Headset</option>
+                      </select>
+
+                      <label>Condition</label>
+
+                      <select id="assetCondition">
+                        <option value="">Select Condition</option>
+                        <option value="good">Good</option>
+                        <option value="damaged">Damaged</option>
+                        <option value="repair">Repair</option>
+                        <option value="notworking">Not Working</option>
+                      </select>
+
+                      <label>Reason</label>
+                      <textarea id="assetreason" placeholder="Enter Reason"></textarea>
+
+                      <div class="popup-buttons">
+                        <button onclick="submitAssetReturn()">Submit</button>
+                        <button onclick="closeAssetReturn()">Cancel</button>
+
+                      </div>
+
+                    </div>
+                    </div>
+                    <div class="popup-overlay" id="assetRequest">
+                      <div class="popup-box">
+                        <div class="info-content">
+                          <h3>Request Company Assets</h3>
+                            <!-- <span class="label">Name</span> -->
+                            <div class="value editable" id="name"></div>
+                        </div>
+                        <label>Asset Category</label>
+                        <select id="AssetCategory" required>
+                          <option value="">select</option>
+                          <option value="all">All</option>
+                          <option value="laptop">Laptop</option>
+                          <option value="mouse">Mouse</option>
+                          <option value="charger">Charger</option>
+                          <option value="keyboard">Keyboard</option>
+                          <option value="idcard">ID Card</option>
+                          <option value="headset">Headset</option>
+
+                        </select>
+                        <label>Asset Description</label>
+                        <textarea id="assetDes" placeholder="Asset Description" required></textarea>
+                        <label>Location</label>
+                        <input type="text" id="assetLocation" required>
+                        <div class="popup-buttons">
+                        <button onclick="submitAssetRequest()">Submit</button>
+                        <button onclick="closeAssetRequest()">Cancel</button>
+
+                      </div>
+                      </div>
                     </div>
 
                 </div>
