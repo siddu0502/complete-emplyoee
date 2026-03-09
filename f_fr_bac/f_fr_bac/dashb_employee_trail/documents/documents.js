@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
     formData.append("description", document.getElementById("docDescInput").value);
     formData.append("file", document.getElementById("docFileInput").files[0]);
     console.log(document.getElementById("docFileInput").files[0])
-    fetch(`http://127.0.0.1:8000/api/upload-documents/${emp_id}/`, {
+    fetch(`http://192.168.1.16:8000/api/upload-documents/${emp_id}/`, {
         method: "POST",
         body: formData
     })

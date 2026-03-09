@@ -7,7 +7,7 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     password: document.getElementById("password").value
   };
 
-  fetch("http://127.0.0.1:8000/api/employee/login/", {
+  fetch("http://192.168.1.16:8000/api/employee/login/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)

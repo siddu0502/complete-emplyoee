@@ -345,7 +345,7 @@ punchBtn.addEventListener("click", () => {
 
     if (!isWorking && !isOnBreak && totalWorkMs === 0) {
 
-        fetch("http://127.0.0.1:8000/api/employee-attendence/create/", {
+        fetch("http://192.168.1.16:8000/api/employee-attendence/create/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: emp_id })
@@ -378,7 +378,11 @@ punchBtn.addEventListener("click", () => {
     }
 
     else if (isWorking) {
-
+        fetch("http://192.168.1.16:8000/api/employee-attendence/checkout/", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: emp_id })
+            });
         // PUNCH OUT
         pauseWorkTimer();
 
