@@ -99,8 +99,8 @@ function openAssetPopup(){
         const condition=document.getElementById("assetCondition").value;
         const reason=document.getElementById("assetreason").value;
         
-        if(!asset){
-            alert("please select asset");
+        if(!asset || !condition || !reason){
+            showToast("error","Please fill all fields");
             return;
         }
         console.log(
@@ -112,7 +112,7 @@ function openAssetPopup(){
 
 
         })
-        alert("asset request sent succussfully")
+        showToast("success","Asset return submitted");
         document.getElementById("assetType").value=""
         document.getElementById("assetCondition").value=""
         document.getElementById("assetreason").value=""
@@ -132,7 +132,7 @@ function openAssetPopup(){
         
 
     if(!emp_id){
-        alert("Employee ID not found");
+        showToast("error","Invalid Employee ID");
         return;
     }
         
@@ -141,7 +141,7 @@ function openAssetPopup(){
         const Asset_loc=document.getElementById("assetLocation").value;
 
         if(!Asset_catagory || !Asset_Des || !Asset_loc){
-            alert("Please fill all fields");
+            showToast("error","Please fill all fields");
             return;
         }
         fetch(`http://192.168.1.16:8000/api/employee/dashboard/${emp_id}/`)
@@ -155,7 +155,7 @@ function openAssetPopup(){
             loc:Asset_loc
         });
         document.getElementById("name").innerText = emp_name;
-        alert("success")
+        showToast("success","Asset request submitted successfully");
         document.getElementById("AssetCategory").value = "";
         document.getElementById("assetDes").value = "";
         document.getElementById("assetLocation").value = "";
@@ -164,4 +164,31 @@ function openAssetPopup(){
 
         })
     .catch(error => console.error("Error:", error));
+}
+function showToast(type, message){
+
+    const toast = document.getElementById("popupToast");
+    const icon = document.getElementById("toastIcon");
+    const title = document.getElementById("toastTitle");
+    const msg = document.getElementById("toastMsg");
+
+    toast.classList.remove("success","error");
+
+    if(type === "success"){
+        toast.classList.add("success");
+        icon.className = "fa-solid fa-circle-check";
+        title.innerText = "Success";
+    }else{
+        toast.classList.add("error");
+        icon.className = "fa-solid fa-circle-exclamation";
+        title.innerText = "Error";
+    }
+
+    msg.innerText = message;
+
+    toast.classList.add("show");
+
+    setTimeout(()=>{
+        toast.classList.remove("show");
+    },3000);
 }
