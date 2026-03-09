@@ -39,23 +39,64 @@
   gap:10px;
   margin-top:15px;
 }
+.edit-actions .btn-secondary2{
+  flex: 1;
+  padding: 10px;
+  border-radius: 6px;
+  background:var(--primary-orange);
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .2s;
+  border: none; 
+}
+
+.edit-actions .btn-secondary2:hover{
+  color: white;
+  background-color: var(--primary-orange-hover);
+}
+.edit-actions .btn-primary{
+  flex: 1;
+  padding: 10px;
+  border-radius: 6px;
+  background: transparent;
+  color: black;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+  border: none; 
+}
+
+.edit-actions .btn-primary:hover{
+  background: transparent;
+  color: red;
+}
 
 .edit-form label{
   font-size:13px;
   font-weight:500;
 }
+/* Inputs */
+.edit-form input,
+.edit-form select{
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d8d8d8;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+  transition: border .2s;
+}
+
+.edit-form input:focus,
+.edit-form select:focus{
+  border-color: #ff6b00;
+  outline: none;
+}
 .edit-modal-overlay{
   z-index:999999;
 }
-/* Add this to your CSS */
-.edit-actions .btn-secondary {
-    border: 1px solid #ccc;
-    color: #333; /* Make sure text is dark on the white modal */
-    background: transparent;
-}
-.edit-actions .btn-secondary:hover {
-    background: #f1f1f1;
-}
+
 /* Add this to your CSS file */
 .edit-form select {
     width: 100%;
@@ -115,7 +156,6 @@
 
   transition: stroke-dashoffset 0.4s linear;
 }
-
 .timer-content {
   position: absolute;
   text-align: center;
@@ -536,7 +576,7 @@
 
 .att-close-btn:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: white;
+  color: rgba(243, 129, 88, 0.717)
 }
 
 /* Body & Table */
@@ -667,15 +707,23 @@
 
 /* === ATTENDANCE CARD TWEAKS === */
 .card-header-text {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--text-dark);
   margin-bottom: 5px;
 }
 .current-date {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-muted);
-  margin-top: 20px;
+  margin-top: 17px;
+  margin-bottom: 17px;
+}
+.production-badge{
+  /* border: 2px solid green; */
+  margin: 20px;
+}
+.status-msg{
+  margin-bottom: 20px;
 }
 
 /* Punch Button - Strong Orange */
@@ -692,6 +740,7 @@
 
   box-shadow: 0 4px 12px rgba(255, 107, 0, 0.2);
   transition: all 0.2s;
+  /* margin-top: 90px;  */
 }
 .btn-punch:hover {
   transform: translateY(-2px);

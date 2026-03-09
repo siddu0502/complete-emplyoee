@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const emp_id = localStorage.getItem('employee_id')
+    const emp_id = localStorage.getItem('employee_id','123')
     console.log(emp_id)
     // const formData = new FormData();
 
