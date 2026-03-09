@@ -671,7 +671,6 @@
   font-weight: 700;
   color: var(--text-dark);
   margin-bottom: 5px;
-  margin-bottom: 30px;
 }
 .current-date {
   font-size: 14px;
@@ -682,6 +681,9 @@
 .production-badge{
   /* border: 2px solid green; */
   margin: 20px;
+}
+.status-msg{
+  margin-bottom: 20px;
 }
 
 /* Punch Button - Strong Orange */
