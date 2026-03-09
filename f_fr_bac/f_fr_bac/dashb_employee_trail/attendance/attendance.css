@@ -667,15 +667,21 @@
 
 /* === ATTENDANCE CARD TWEAKS === */
 .card-header-text {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--text-dark);
   margin-bottom: 5px;
+  margin-bottom: 30px;
 }
 .current-date {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-muted);
-  margin-top: 20px;
+  margin-top: 17px;
+  margin-bottom: 17px;
+}
+.production-badge{
+  /* border: 2px solid green; */
+  margin: 20px;
 }
 
 /* Punch Button - Strong Orange */
@@ -692,6 +698,7 @@
 
   box-shadow: 0 4px 12px rgba(255, 107, 0, 0.2);
   transition: all 0.2s;
+  /* margin-top: 90px;  */
 }
 .btn-punch:hover {
   transform: translateY(-2px);
