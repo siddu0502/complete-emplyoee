@@ -158,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const empId = localStorage.getItem('employee_id');
     
-    fetch(`http://13.60.240.189:8000/api/employee/dashboard/${empId}/`)
+    fetch(`http://13.60.26.193:8000/api/employee/dashboard/${empId}/`)
         .then(res => res.json())
         .then(data => {
             document.getElementById("name").innerText = data.name;
@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    fetch(`http://13.60.240.189:8000/api/employee-payslips/${empId}/`)
+    fetch(`http://13.60.26.193:8000/api/employee-payslips/${empId}/`)
         .then(res => res.json())
         .then(data => {
             payslipTableBody.innerHTML = "";

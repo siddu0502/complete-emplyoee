@@ -1,12 +1,11 @@
 const emp_id = localStorage.getItem("employee_id");
 document.addEventListener('DOMContentLoaded', () => {
-    emp_id = localStorage.getItem('employee_id')
-fetch(`http://192.168.1.16:8000/api/employee/dashboard/${emp_id}/`)
+fetch(`http://13.60.26.193:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
             console.log(data)
             document.getElementById("name").innerText = data.name;
-             document.getElementById("role").innerText = data.role;})
+            document.getElementById("role").innerText = data.role;})
     // --- 1. Sidebar Toggles ---
     const sidebar = document.getElementById('ast-sidebar');
     const toggleBtn = document.getElementById('ast-sidebar-toggle');
@@ -150,7 +149,7 @@ function openAssetPopup(){
             showToast("error","Please fill all fields");
             return;
         }
-        fetch(`http://192.168.1.16:8000/api/employee/dashboard/${emp_id}/`)
+        fetch(`http://13.60.26.193:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
             const emp_name=data.name;

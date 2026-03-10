@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const emp_id = localStorage.getItem('employee_id','123')
     console.log(emp_id)
-   fetch(`http://13.60.240.189:8000/api/employee/dashboard/${emp_id}/`)
+   fetch(`http://13.60.26.193:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
             console.log(data)
@@ -25,6 +25,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // .catch(error => {
     //     console.error("Error:", error);
     // });
+    const documentstable = document.getElementById('table-documents')
+    // fetch(`http://13.60.26.193:8000/api/employee-documents/${emp_id}/`)
+    //     .then(res => res.json())
+    //     .then(data => {
+    //         documentstable.innerHTML = "";
+    //         console.log(data)
+    //         if (!data || data.length === 0) {
+    //             documnets.innerHTML = `<tr><td colspan="4">No documnets found</td></tr>`;
+    //             return;
+    //         }
+
+    //         data.forEach(p => {
+    //             const row = document.createElement("tr");
+    //             row.innerHTML = `
+    //                 <td>${p.uploaded_at}</td>
+    //                 <td>${p.doc_type}</td>
+    //                 <td>${p.description}</td>
+    //                 <td>${p.file}</td>
+    //             `;
+    //             documentstable.appendChild(row);
+    //         });
+    //     })
+    //     .catch(err => {
+    //         console.error("Error fetching payslips:", err);
+    //         payslipTableBody.innerHTML = `<tr><td colspan="4">Error loading documents</td></tr>`;
+    //     });
 
     // Select elements using the NEW UNIQUE IDs
     const docInput = document.getElementById('docFileInput');
@@ -96,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
     formData.append("description", document.getElementById("docDescInput").value);
     formData.append("file", document.getElementById("docFileInput").files[0]);
     console.log(document.getElementById("docFileInput").files[0])
-    fetch(`http://13.60.240.189:8000/api/upload-documents/${emp_id}/`, {
+    fetch(`http://13.60.26.193:8000/api/upload-documents/${emp_id}/`, {
         method: "POST",
         body: formData
     })
