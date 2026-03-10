@@ -7,7 +7,7 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     password: document.getElementById("password").value
   };
 
-  fetch("http://192.168.1.16:8000/api/employee/login/", {
+  fetch("http://hrmssaas.pythonanywhere.com/api/employee/login/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
@@ -18,6 +18,7 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
 
     if(data.status === "success"){
       localStorage.setItem("employee_id", data.employee_data.id);
+      console.log(data.employee_data.id)
       window.location.href = "../dashboard/dashboard.html";
     } else {
       alert(data.message);
