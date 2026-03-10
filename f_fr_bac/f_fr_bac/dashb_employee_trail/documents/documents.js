@@ -25,32 +25,48 @@ document.addEventListener('DOMContentLoaded', function() {
     // .catch(error => {
     //     console.error("Error:", error);
     // });
-    const documentstable = document.getElementById('table-documents')
-    // fetch(`http://13.60.26.193:8000/api/employee-documents/${emp_id}/`)
-    //     .then(res => res.json())
-    //     .then(data => {
-    //         documentstable.innerHTML = "";
-    //         console.log(data)
-    //         if (!data || data.length === 0) {
-    //             documnets.innerHTML = `<tr><td colspan="4">No documnets found</td></tr>`;
-    //             return;
-    //         }
 
-    //         data.forEach(p => {
-    //             const row = document.createElement("tr");
-    //             row.innerHTML = `
-    //                 <td>${p.uploaded_at}</td>
-    //                 <td>${p.doc_type}</td>
-    //                 <td>${p.description}</td>
-    //                 <td>${p.file}</td>
-    //             `;
-    //             documentstable.appendChild(row);
-    //         });
-    //     })
-    //     .catch(err => {
-    //         console.error("Error fetching payslips:", err);
-    //         payslipTableBody.innerHTML = `<tr><td colspan="4">Error loading documents</td></tr>`;
-    //     });
+    function formatDate(isoString) {
+    const date = new Date(isoString); // Convert ISO string to Date object
+    const options = { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        // second: '2-digit',
+        hour12: true 
+    };
+    return date.toLocaleString('en-IN', options); // Format according to locale
+}
+    const documentstable = document.getElementById('table-documents')
+    fetch(`http://13.60.26.193:8000//api/employee-documents/${emp_id}/`)
+        .then(res => res.json())
+        .then(data => {
+            documentstable.innerHTML = "";
+            console.log(data)
+            if (!data || data.length === 0) {
+                documnets.innerHTML = `<tr><td colspan="4">No documnets found</td></tr>`;
+                return;
+            }
+
+            data.forEach(p => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${formatDate(p.uploaded_at)}</td>
+                    <td>${p.doc_type}</td>
+                    <td>${p.description}</td>
+                    <td> <a href="http://13.60.26.193:8000/${p.file}" target="_blank">View
+                        
+                    </a></td>
+                `;
+                documentstable.appendChild(row);
+            });
+        })
+        // .catch(err => {
+        //     console.error("Error fetching payslips:", err);
+        //     payslipTableBody.innerHTML = `<tr><td colspan="4">Error loading documents</td></tr>`;
+        // });
 
     // Select elements using the NEW UNIQUE IDs
     const docInput = document.getElementById('docFileInput');

@@ -4,7 +4,9 @@ const emp_id = localStorage.getItem("employee_id");
         .then(data => {
             document.getElementById("name").innerText = data.name;
              document.getElementById("role").innerText = data.role;})
-fetch(`http://13.60.26.193:8000/api/employee/leaves/${emp_id}/`)
+
+function leaves_status (){
+        fetch(`http://13.60.26.193:8000/api/employee/leaves/${emp_id}/`)
 
         .then(res => res.json())
         .then(data => {
@@ -16,6 +18,9 @@ fetch(`http://13.60.26.193:8000/api/employee/leaves/${emp_id}/`)
             document.getElementById('lop').innerText = data.lop
             document.getElementById('remaining').innerText = data.remaining
         })
+}
+setInterval(leaves_status,1000);
+leaves_status()
 function showToast(message, type = 'error') {
     toastMsg.innerText = message;
     

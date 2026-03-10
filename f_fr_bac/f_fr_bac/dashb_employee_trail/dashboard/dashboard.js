@@ -24,6 +24,10 @@ fetch(`http://13.60.26.193:8000/api/employee/dashboard/${emp_id}/`)
                 document.getElementById("bankname").innerText = data.bank_details[0].bank_name;
                 document.getElementById("accno").innerText = data.bank_details[0].acc_no;
                 document.getElementById("ifsccode").innerText = data.bank_details[0].ifsc_code;
+                document.getElementById("accholdername").innerText = data.bank_details[0].holder_name;
+                document.getElementById("number").innerText = data.bank_details[0].mobile;
+                document.getElementById("branch").innerText = data.bank_details[0].branch
+                
 
                 }
                 
