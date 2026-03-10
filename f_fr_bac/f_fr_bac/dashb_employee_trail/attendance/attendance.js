@@ -560,7 +560,7 @@ fetch(`http://13.60.240.189:8000/api/attendence-status/${emp_id}/`)
         localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
         renderCalendar();
     }
-
+    
     function renderCalendar() {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
