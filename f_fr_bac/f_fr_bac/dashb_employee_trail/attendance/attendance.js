@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
 const emp_id = localStorage.getItem('employee_id')   // ==========================================
     // 1. CONFIGURATION & STATE
     // ==========================================
-    fetch(`http://hrmssaas.pythonanywhere.com/api/employee/dashboard/${emp_id}/`)
+    fetch(`http://13.60.240.189:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
             console.log(data)
@@ -351,7 +351,7 @@ punchBtn.addEventListener("click", () => {
 
     if (!isWorking && !isOnBreak && totalWorkMs === 0) {
 
-        fetch("http://hrmssaas.pythonanywhere.com/api/employee-attendence/create/", {
+        fetch("http://13.60.240.189:8000/api/employee-attendence/create/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: emp_id })
@@ -359,12 +359,9 @@ punchBtn.addEventListener("click", () => {
         .then(res => res.json())
         .then(data => {
 
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
+            
 
-            alert("Attendance saved successfully");
+           
 
         })
         .catch(err => console.error("Punch In Error:", err));
@@ -384,7 +381,7 @@ punchBtn.addEventListener("click", () => {
     }
 
     else if (isWorking) {
-        fetch("http://hrmssaas.pythonanywhere.com/api/employee-attendence/checkout/", {
+        fetch("http://13.60.240.189:8000/api/employee-attendence/checkout/", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id: emp_id })
@@ -448,7 +445,7 @@ punchBtn.addEventListener("click", () => {
 
 window.addEventListener("load", () => {
 
-fetch(`http://hrmssaas.pythonanywhere.com/api/attendence-status/${emp_id}/`)
+fetch(`http://13.60.240.189:8000/api/attendence-status/${emp_id}/`)
 .then(res => res.json())
 .then(data => {
 
@@ -471,7 +468,9 @@ fetch(`http://hrmssaas.pythonanywhere.com/api/attendence-status/${emp_id}/`)
 
     else if (data.status === "punched_out") {
 
+
         punchBtn.innerText = "Shift Completed";
+        statusMsg.innerHTML = `<i class="fa-solid fa-fingerprint"></i>Shift Completed `
         punchBtn.disabled = true;
 
     }

@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const emp_id = localStorage.getItem('employee_id','123')
     console.log(emp_id)
-   fetch(`http://hrmssaas.pythonanywhere.com/api/employee/dashboard/${emp_id}/`)
+   fetch(`http://13.60.240.189:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
             console.log(data)
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
     formData.append("description", document.getElementById("docDescInput").value);
     formData.append("file", document.getElementById("docFileInput").files[0]);
     console.log(document.getElementById("docFileInput").files[0])
-    fetch(`http://192.168.1.16:8000/api/upload-documents/${emp_id}/`, {
+    fetch(`http://13.60.240.189:8000/api/upload-documents/${emp_id}/`, {
         method: "POST",
         body: formData
     })

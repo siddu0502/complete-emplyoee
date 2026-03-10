@@ -1,10 +1,10 @@
 const emp_id = localStorage.getItem("employee_id");
-    fetch(`http://192.168.1.16:8000/api/employee/dashboard/${emp_id}/`)
+    fetch(`http://13.60.240.189:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
             document.getElementById("name").innerText = data.name;
              document.getElementById("role").innerText = data.role;})
-fetch(`http://192.168.1.16:8000/api/employee/leaves/${emp_id}/`)
+fetch(`http://13.60.240.189:8000/api/employee/leaves/${emp_id}/`)
 
         .then(res => res.json())
         .then(data => {
@@ -130,7 +130,7 @@ leaveForm.addEventListener("submit", function (event) {
 
     };
 
-    fetch(`http://192.168.1.16:8000/api/employee/apply-leave/${emp_id}/`, {
+    fetch(`http://13.60.240.189:8000/api/employee/apply-leave/${emp_id}/`, {
 
         method: "POST",
         headers: {
@@ -168,7 +168,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     setInterval(() => {
 
-        fetch(`http://192.168.1.16:8000/api/employee/apply-leave/${emp_id}/`)
+        fetch(`http://13.60.240.189:8000/api/employee/apply-leave/${emp_id}/`)
         .then(response => response.json())
         .then(data => {
 
