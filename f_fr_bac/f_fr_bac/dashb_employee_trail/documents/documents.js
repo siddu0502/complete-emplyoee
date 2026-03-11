@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
     return date.toLocaleString('en-IN', options); // Format according to locale
 }
     const documentstable = document.getElementById('table-documents')
-    fetch(`http://13.60.26.193:8000//api/employee-documents/${emp_id}/`)
+    fetch(`http://13.60.26.193:8000/api/employee-documents/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
             documentstable.innerHTML = "";
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${formatDate(p.uploaded_at)}</td>
                     <td>${p.doc_type}</td>
                     <td>${p.description}</td>
-                    <td> <a href="http://13.60.26.193:8000/${p.file}" target="_blank">View
+                    <td> <a href="http://13.60.26.193/media/documents/${p.file}" target="_blank">View
                         
                     </a></td>
                 `;
