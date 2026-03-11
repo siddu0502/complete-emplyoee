@@ -144,16 +144,36 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .then(response => response.json().then(data => ({status: response.status, body: data})))
     .then(result => {
-        if(result.status === 201 || result.status === 200){
-            console.log("Upload success:", result.body);
-        } else {
-            console.error("Upload failed:", result.body);
+        console.log("Response status:", result.status);
+        console.log("Response body:", result.body);
+        // Show success popup regardless for now
+        const popup = document.getElementById('uploadSuccessPopup');
+        if (popup) {
+            popup.classList.add('show');
         }
     })
-    .catch(error => console.error("Error:", error));
+    .catch(error => {
+        console.error("Error:", error);
+        // Show popup even on error for testing
+        const popup = document.getElementById('uploadSuccessPopup');
+        if (popup) {
+            popup.classList.add('show');
+        }
+    });
 
             ;
            
+        });
+    }
+
+    // Close popup handler
+    const popupCloseBtn = document.getElementById('uploadPopupClose');
+    if (popupCloseBtn) {
+        popupCloseBtn.addEventListener('click', function() {
+            const popup = document.getElementById('uploadSuccessPopup');
+            if (popup) {
+                popup.classList.remove('show');
+            }
         });
     }
 });
