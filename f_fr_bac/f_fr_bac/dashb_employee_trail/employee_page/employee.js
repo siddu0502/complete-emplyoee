@@ -263,9 +263,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
     const birthdays = [
-    { name: "Jermia", role: "IOS Developer", date: "Today", img: "https://randomuser.me/api/portraits/women/65.jpg" },
-    { name: "John Smith", role: "Backend Developer", date: "Tomorrow", img: "https://randomuser.me/api/portraits/men/32.jpg" },
-    { name: "Emma Watson", role: "UI Designer", date: "18 Oct", img: "https://randomuser.me/api/portraits/women/44.jpg" }
+    { name: "Dhamodhar", role: "IOS Developer", date: "Today", img: "../assets/profiledp.jpeg" },
+    { name: "Arjun", role: "Backend Developer", date: "Tomorrow", img: "../assets/profiledp.jpeg" },
+    { name: "Arya", role: "UI Designer", date: "18 Oct", img: "../assets/profiledp.jpeg" }
 ];
 
 const wishModal = document.getElementById("wishModal");
@@ -406,3 +406,21 @@ window.onclick = function(event) {
 };
 
 
+//holidays section
+const popup = document.getElementById("holidayPopup");
+const openBtn = document.getElementById("viewHolidayBtn");
+const closeBtn = document.getElementById("closeHoliday");
+
+openBtn.onclick = () => {
+  popup.classList.add("active");
+};
+
+closeBtn.onclick = () => {
+  popup.classList.remove("active");
+};
+
+window.onclick = (e) => {
+  if(e.target === popup){
+    popup.classList.remove("active");
+  }
+};
