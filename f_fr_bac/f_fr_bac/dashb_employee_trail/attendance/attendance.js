@@ -629,6 +629,74 @@ fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
             calEls.tableBody.appendChild(tr);
         });
     }
+    async function loadHistoryTable() {
+
+    const res = await fetch(`http://13.60.26.193:8000/api/employee-attendence-history/${emp_id}/`);
+    const data = await res.json();
+
+    calEls.tableBody.innerHTML = "";
+
+    const attendanceMap = {};
+    data.forEach(item => {
+        attendanceMap[item.date] = item;
+    });
+
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    for (let day = 1; day <= daysInMonth; day++) {
+
+        const dateObj = new Date(year, month, day);
+        const dateStr = dateObj.toISOString().split("T")[0];
+
+        const record = attendanceMap[dateStr];
+
+        let status = "Absent";
+        let inTime = "-";
+        let outTime = "-";
+
+        if (record) {
+            status = "Present";
+
+            if (record.checkin) {
+                const checkinTime = new Date(record.checkin);
+                inTime = checkinTime.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            }
+
+            if (record.checkout) {
+                const checkoutTime = new Date(record.checkout);
+                outTime = checkoutTime.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            }
+        }
+
+        const formattedDate = dateObj.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${formattedDate}</td>
+            <td>${status}</td>
+            <td style="font-family:monospace;">${inTime}</td>
+            <td style="font-family:monospace;">${outTime}</td>
+            <td>
+                    <button class="btn-edit-row" data-date="">
+                       <i class="fa-solid fa-pen"></i>
+                   </button>
+               </td>
+
+        `;
+
+        calEls.tableBody.appendChild(tr);
+    }
+}
+
 
     if (calEls.viewBtn) calEls.viewBtn.addEventListener("click", () => { loadHistoryTable(); calEls.modal.classList.add("show"); });
     const closeHistoryModal = () => calEls.modal.classList.remove("show");

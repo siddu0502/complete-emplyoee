@@ -233,36 +233,46 @@
             </div>
 
             <!-- 3. MODAL POPUP (Professional Design) -->
-            <div class="att-modal-overlay" id="attModal">
-                <div class="att-modal-box">
-                    <div class="att-modal-header">
-                        <div class="header-content">
-                            <h3>Attendance Records</h3>
-                            <span class="header-subtitle">Detailed log of punch-in & punch-out timings</span>
-                        </div>
-                        <button class="att-close-btn" id="attCloseBtn"><i class="fa-solid fa-xmark"></i></button>
-                    </div>
-
-                    <div class="att-modal-body">
-                        <div class="table-container">
-                            <table class="att-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Status</th>
-                                        <th>In Time</th>
-                                        <th>Out Time</th>
-                                        <th>Edit</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="attTableBody">
-                                    <!-- JS injects rows here -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+           <div class="att-modal-overlay" id="attModal">
+    <div class="att-modal-box">
+        <div class="att-modal-header">
+            <div class="header-content">
+                <h3>Attendance Records</h3>
+                <span class="header-subtitle">Detailed log of punch-in & punch-out timings</span>
             </div>
+
+            <div style="display:flex; gap:10px; align-items:center;">
+                <input type="month" id="monthSelector">
+                <button onclick="loadHistoryTable()" class="btn-load">Load</button>
+            </div>
+
+            <button class="att-close-btn" id="attCloseBtn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="att-modal-body">
+            <div class="table-container">
+                <table class="att-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>In Time</th>
+                            <th>Out Time</th>
+                            <th>Edit</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="attTableBody">
+                        <!-- JS injects rows -->
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
             <!-- breakmanagement section -->
             <div class="bm-main-container">

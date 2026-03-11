@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${formatDate(p.uploaded_at)}</td>
                     <td>${p.doc_type}</td>
                     <td>${p.description}</td>
-                    <td> <a href="http://13.60.26.193/media/documents/${p.file}" target="_blank">View
+                    <td> <a href="http://13.60.26.193/${p.file}" target="_blank">View
                         
                     </a></td>
                 `;
@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
     formData.append("description", document.getElementById("docDescInput").value);
     formData.append("file", document.getElementById("docFileInput").files[0]);
     console.log(document.getElementById("docFileInput").files[0])
-    fetch(`http://13.60.26.193:8000/api/upload-documents/${emp_id}/`, {
+    fetch(`http://13.60.26.193/api/upload-documents/${emp_id}/`, {
         method: "POST",
         body: formData
     })
