@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // .catch(error => {
     //     console.error("Error:", error);
     // });
-
+    function documents_table (){
     function formatDate(isoString) {
     const date = new Date(isoString); // Convert ISO string to Date object
     const options = { 
@@ -39,6 +39,10 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     return date.toLocaleString('en-IN', options); // Format according to locale
 }
+
+
+        
+    
     const documentstable = document.getElementById('table-documents')
     fetch(`http://13.60.26.193:8000/api/employee-documents/${emp_id}/`)
         .then(res => res.json())
@@ -57,12 +61,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${p.doc_type}</td>
                     <td>${p.description}</td>
                     <td> <a href="http://13.60.26.193/${p.file}" target="_blank">View
-                        
                     </a></td>
                 `;
                 documentstable.appendChild(row);
             });
-        })
+        })}
+setInterval(documents_table,1000)
         // .catch(err => {
         //     console.error("Error fetching payslips:", err);
         //     payslipTableBody.innerHTML = `<tr><td colspan="4">Error loading documents</td></tr>`;
@@ -128,52 +132,50 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 4. Form Submit Demo
-    if(docForm) {
-        docForm.addEventListener('submit', function(e) {
-            e.preventDefault()
-             
-    const formData = new FormData();
+    if (docForm) {
+    docForm.addEventListener('submit', function(e) {
+        e.preventDefault();
 
-    formData.append("doc_type", document.getElementById("docTypeSelect").value);
-    formData.append("description", document.getElementById("docDescInput").value);
-    formData.append("file", document.getElementById("docFileInput").files[0]);
-    console.log(document.getElementById("docFileInput").files[0])
-    fetch(`http://13.60.26.193/api/upload-documents/${emp_id}/`, {
-        method: "POST",
-        body: formData
-    })
-    .then(response => response.json().then(data => ({status: response.status, body: data})))
-    .then(result => {
-        console.log("Response status:", result.status);
-        console.log("Response body:", result.body);
-        // Show success popup regardless for now
-        const popup = document.getElementById('uploadSuccessPopup');
-        if (popup) {
-            popup.classList.add('show');
-        }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        // Show popup even on error for testing
-        const popup = document.getElementById('uploadSuccessPopup');
-        if (popup) {
-            popup.classList.add('show');
-        }
-    });
+        const formData = new FormData();
 
-            ;
-           
-        });
-    }
+        formData.append("doc_type", document.getElementById("docTypeSelect").value);
+        formData.append("description", document.getElementById("docDescInput").value);
+        formData.append("file", document.getElementById("docFileInput").files[0]);
 
-    // Close popup handler
-    const popupCloseBtn = document.getElementById('uploadPopupClose');
-    if (popupCloseBtn) {
-        popupCloseBtn.addEventListener('click', function() {
+        console.log(document.getElementById("docFileInput").files[0]);
+
+        fetch(`http://13.60.26.193/api/upload-documents/${emp_id}/`, {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json().then(data => ({status: response.status, body: data})))
+        .then(result => {
+
+            console.log("Response status:", result.status);
+            console.log("Response body:", result.body);
+
             const popup = document.getElementById('uploadSuccessPopup');
-            if (popup) {
-                popup.classList.remove('show');
+
+            if(result.status === 201 || result.status === 200){
+                if (popup) popup.classList.add('show');
+            } else {
+                alert("Upload failed: " + JSON.stringify(result.body));
             }
+
+        })
+        .catch(error => {
+            console.error("Error:", error);
         });
-    }
+
+    });
+}
+
+const popupCloseBtn = document.getElementById('uploadPopupClose');
+
+if (popupCloseBtn) {
+    popupCloseBtn.addEventListener('click', function() {
+        const popup = document.getElementById('uploadSuccessPopup');
+        if (popup) popup.classList.remove('show');
+    });
+}
 });
