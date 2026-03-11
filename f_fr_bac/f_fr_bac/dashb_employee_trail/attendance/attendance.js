@@ -92,6 +92,22 @@ const emp_id = localStorage.getItem('employee_id')   // ========================
 
     let currentDate = new Date(); // For Calendar
 
+    // set default month picker to current month and wire up change
+    const monthPicker = document.getElementById("monthSelector");
+    if (monthPicker) {
+        const now = new Date();
+        monthPicker.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        monthPicker.addEventListener("change", loadHistoryTable);
+    }
+
+    const loadBtn = document.getElementById("loadMonthBtn");
+    if (loadBtn) {
+        loadBtn.addEventListener("click", loadHistoryTable);
+    }
+
+    // cache for currently displayed attendance records (month view)
+    const attendanceCache = {};
+
     // ==========================================
     // 3. HELPER FUNCTIONS
     // ==========================================
@@ -599,37 +615,27 @@ fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
     if (calEls.next) calEls.next.addEventListener("click", () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
 
     // Modal
-    function loadHistoryTable() {
-        const history = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY)) || {};
-        calEls.tableBody.innerHTML = "";
-        const rows = Object.values(history).sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        if (rows.length === 0) {
-            calEls.tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px; color:#999;">No records found</td></tr>`;
-            return;
-        }
-
-        rows.forEach(row => {
-            const tr = document.createElement("tr");
-            let badgeClass = row.status.toLowerCase().includes('absent') ? 'status-absent' : 'status-present';
-            const dateObj = new Date(row.date);
-            const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-            tr.innerHTML = `
-                <td>${formattedDate}</td>
-                <td><span class="status-pill ${badgeClass}">${row.status}</span></td>
-                <td style="font-family:monospace;">${row.inTime}</td>
-                <td style="font-family:monospace;">${row.outTime}</td>
-                <td>
-                    <button class="btn-edit-row" data-date="${row.date}">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
-                </td>
-            `;
-            calEls.tableBody.appendChild(tr);
-        });
-    }
+    // (history loading implementation lives further down - uses backend and month selector)
     async function loadHistoryTable() {
+    // determine selected month/year from picker or default to current
+    const picker = document.getElementById("monthSelector");
+    let year, month;
+    if (picker && picker.value) {
+        const [y, m] = picker.value.split("-");
+        year = parseInt(y, 10);
+        month = parseInt(m, 10) - 1;
+    } else {
+        const now = new Date();
+        year = now.getFullYear();
+        month = now.getMonth();
+        if (picker) picker.value = `${year}-${String(month + 1).padStart(2, '0')}`;
+    }
+
+    // update modal label
+    const modalLabel = document.getElementById("modalMonthYear");
+    if (modalLabel) {
+        modalLabel.innerText = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+    }
 
     const res = await fetch(`http://13.60.26.193:8000/api/employee-attendence-history/${emp_id}/`);
     const data = await res.json();
@@ -641,36 +647,34 @@ fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
         attendanceMap[item.date] = item;
     });
 
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     for (let day = 1; day <= daysInMonth; day++) {
-
         const dateObj = new Date(year, month, day);
         const dateStr = dateObj.toISOString().split("T")[0];
 
         const record = attendanceMap[dateStr];
 
         let status = "Absent";
-        let inTime = "-";
-        let outTime = "-";
+        let inTime = "";
+        let outTime = "";
 
         if (record) {
-            status = "Present";
+            status = record.status || "Present";
 
             if (record.checkin) {
                 const checkinTime = new Date(record.checkin);
-                inTime = checkinTime.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                inTime = checkinTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
             }
 
             if (record.checkout) {
                 const checkoutTime = new Date(record.checkout);
-                outTime = checkoutTime.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                outTime = checkoutTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
             }
         }
+
+        // cache entry for use by edit popup
+        attendanceCache[dateStr] = { status, inTime, outTime };
 
         const formattedDate = dateObj.toLocaleDateString('en-US', {
             month: 'short',
@@ -679,20 +683,17 @@ fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
         });
 
         const tr = document.createElement("tr");
-
         tr.innerHTML = `
             <td>${formattedDate}</td>
             <td>${status}</td>
-            <td style="font-family:monospace;">${inTime}</td>
-            <td style="font-family:monospace;">${outTime}</td>
+            <td style="font-family:monospace;">${inTime || '-'}</td>
+            <td style="font-family:monospace;">${outTime || '-'}</td>
             <td>
-                    <button class="btn-edit-row" data-date="">
+                    <button class="btn-edit-row" data-date="${dateStr}" data-status="${status}" data-intime="${inTime}" data-outtime="${outTime}">
                        <i class="fa-solid fa-pen"></i>
                    </button>
                </td>
-
         `;
-
         calEls.tableBody.appendChild(tr);
     }
 }
@@ -711,46 +712,36 @@ fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
         if (!btn) return;
 
         const dateKey = btn.dataset.date;
-        const history = getHistory();
-        const record = history[dateKey];
-
-        if (!record) {
-            alert("Error: Record not found in local storage.");
-            return;
-        }
-
         editingDateKey = dateKey;
+
+        // use cached record (from most recent history load)
+        const record = attendanceCache[dateKey] || { status: "Present", inTime: "", outTime: "" };
 
         // Fill Inputs
         const inTimeInput = document.getElementById("editInTime");
         const outTimeInput = document.getElementById("editOutTime");
+        const inAmpm = document.getElementById("editInAMPM");
+        const outAmpm = document.getElementById("editOutAMPM");
         const statusInput = document.getElementById("editStatus");
         if (inTimeInput && outTimeInput) {
             inTimeInput.value = convertTo24(record.inTime);
             outTimeInput.value = convertTo24(record.outTime);
+            if (inAmpm) inAmpm.value = record.inTime && record.inTime.toUpperCase().includes('PM') ? 'PM' : 'AM';
+            if (outAmpm) outAmpm.value = record.outTime && record.outTime.toUpperCase().includes('PM') ? 'PM' : 'AM';
             if(statusInput) statusInput.value = record.status || "Present";
         }
 
         // Toggle Visiblity
-        closeHistoryModal(); // Hide large table
+        closeHistoryModal(); // Hide large table if open
 
         const editModal = document.getElementById("editModal");
         if (editModal) {
-            // FIX: Move to body to avoid clipping
             document.body.appendChild(editModal);
-            
-            // FIX: Force Styles directly to override any CSS issues
             editModal.style.display = "flex";
             editModal.style.visibility = "visible";
             editModal.style.opacity = "1";
             editModal.style.zIndex = "9999999";
-            
-            // Add class for animation
             setTimeout(() => editModal.classList.add("show"), 10);
-            
-            console.log("Edit Modal Opened for:", dateKey);
-        } else {
-            console.error("Edit Modal ID 'editModal' not found in HTML.");
         }
     });
 
@@ -761,25 +752,41 @@ fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
             if (!editingDateKey) return;
             const inTimeInput = document.getElementById("editInTime");
             const outTimeInput = document.getElementById("editOutTime");
-            
-            let history = getHistory();
-            if (history[editingDateKey]) {
-                
-                const statusInput = document.getElementById("editStatus");
+            const inAmpm = document.getElementById("editInAMPM");
+            const outAmpm = document.getElementById("editOutAMPM");
+            const statusInput = document.getElementById("editStatus");
 
-                if(statusInput) history[editingDateKey].status = statusInput.value;
-
-                history[editingDateKey].inTime = convertTo12(inTimeInput.value);
-                history[editingDateKey].outTime = convertTo12(outTimeInput.value);
-                localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
-
-                closeEditModal();
-                loadHistoryTable(); // Refresh table
-                renderCalendar();   // Refresh calendar
-                
-                // Re-open history modal to see changes
-                if(calEls.modal) calEls.modal.classList.add("show");
+            // time formatting helper
+            function formatWithAMPM(timeVal, ampmVal) {
+                if (!timeVal) return "";
+                let [h, m] = timeVal.split(":");
+                h = parseInt(h, 10);
+                if (ampmVal === 'PM' && h < 12) h += 12;
+                if (ampmVal === 'AM' && h === 12) h = 0;
+                const d = new Date();
+                d.setHours(h, parseInt(m, 10));
+                return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
             }
+
+            const newStatus = statusInput ? statusInput.value : "Present";
+            const newIn = formatWithAMPM(inTimeInput.value, inAmpm ? inAmpm.value : 'AM');
+            const newOut = formatWithAMPM(outTimeInput.value, outAmpm ? outAmpm.value : 'AM');
+
+            // update cache
+            attendanceCache[editingDateKey] = { status: newStatus, inTime: newIn, outTime: newOut };
+
+            // update row display if present
+            const rowBtn = document.querySelector(`.btn-edit-row[data-date="${editingDateKey}"]`);
+            if (rowBtn) {
+                const row = rowBtn.closest('tr');
+                if (row) {
+                    row.cells[1].innerText = newStatus;
+                    row.cells[2].innerText = newIn || '-';
+                    row.cells[3].innerText = newOut || '-';
+                }
+            }
+
+            closeEditModal();
         });
     }
 

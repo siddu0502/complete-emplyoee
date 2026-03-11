@@ -238,12 +238,14 @@
         <div class="att-modal-header">
             <div class="header-content">
                 <h3>Attendance Records</h3>
-                <span class="header-subtitle">Detailed log of punch-in & punch-out timings</span>
+                <span class="header-subtitle">Detailed log of punch-in &amp; punch-out timings</span>
+                <!-- Month/Year label will be updated dynamically -->
+                <div id="modalMonthYear" class="header-monthyear" style="margin-top:4px;font-weight:500;color:#333;"></div>
             </div>
 
-            <div style="display:flex; gap:10px; align-items:center;">
+            <div class="month-selector-container" style="display:flex; gap:10px; align-items:center;">
                 <input type="month" id="monthSelector">
-                <button onclick="loadHistoryTable()" class="btn-load">Load</button>
+                <button id="loadMonthBtn" class="btn-load">Load</button>
             </div>
 
             <button class="att-close-btn" id="attCloseBtn">
@@ -520,21 +522,32 @@
                 <select id="editStatus" class="form-input">
                     <option value="Present">Present</option>
                     <option value="Absent">Absent</option>
-                    <option value="Half Day">Half Day</option> 
+                    <option value="Half Day">Half Day</option>
+                    <option value="Unpaid">Unpaid</option>
+                    <option value="Paid">Paid</option>
                 </select>
  
-
                 <label>In Time</label>
-                <input type="time" id="editInTime">
+                <div class="time-input-wrapper" style="display:flex; align-items:center; gap:4px;">
+                    <input type="time" id="editInTime">
+                    <select id="editInAMPM" class="form-input ampm-select" style="width:60px;">
+                        <option>AM</option>
+                        <option>PM</option>
+                    </select>
+                </div>
 
                 <label>Out Time</label>
-                <input type="time" id="editOutTime">
-
-
+                <div class="time-input-wrapper" style="display:flex; align-items:center; gap:4px;">
+                    <input type="time" id="editOutTime">
+                    <select id="editOutAMPM" class="form-input ampm-select" style="width:60px;">
+                        <option>AM</option>
+                        <option>PM</option>
+                    </select>
+                </div>
             </div>
 
             <div class="edit-actions">
-                <button id="saveEditBtn" class="btn-secondary2">Save</button>
+                <button id="saveEditBtn" class="btn-secondary2">Update</button>
                 <button id="cancelEditBtn" class="btn-primary">Cancel</button>
             </div>
 
