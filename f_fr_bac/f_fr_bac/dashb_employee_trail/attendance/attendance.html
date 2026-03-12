@@ -284,45 +284,45 @@
             <!-- 3. MODAL POPUP (Professional Design) -->
            <div class="att-modal-overlay" id="attModal">
     <div class="att-modal-box">
-        <div class="att-modal-header">
-            <div class="header-content">
-                <h3>Attendance Records</h3>
-                <span class="header-subtitle">Detailed log of punch-in &amp; punch-out timings</span>
-                <!-- Month/Year label will be updated dynamically -->
-                <div id="modalMonthYear" class="header-monthyear" style="margin-top:4px;font-weight:500;color:#333;"></div>
-            </div>
-
-            <div class="month-selector-container" style="display:flex; gap:10px; align-items:center;">
-                <input type="month" id="monthSelector">
-                <button id="loadMonthBtn" class="btn-load">Load</button>
-            </div>
-
-            <button class="att-close-btn" id="attCloseBtn">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+    <div class="att-modal-header">
+        <div class="header-content">
+            <h3>Attendance Records</h3>
+            <span class="header-subtitle">Detailed log of punch-in & punch-out timings</span>
         </div>
 
-        <div class="att-modal-body">
-            <div class="table-container">
-                <table class="att-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>In Time</th>
-                            <th>Out Time</th>
-                            <th>Edit</th>
-                        </tr>
-                    </thead>
+        <!-- DUAL DROPDOWN CONTROLS -->
+        <div class="custom-cal-nav">
+            <!-- Month Dropdown -->
+            <select id="navMonthSelect" class="nav-select month-select"></select>
+            
+            <!-- Year Dropdown -->
+            <select id="navYearSelect" class="nav-select year-select"></select>
+        </div>
 
-                    <tbody id="attTableBody">
-                        <!-- JS injects rows -->
-                    </tbody>
+        <button class="att-close-btn" id="attCloseBtn">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
 
-                </table>
-            </div>
+    <div class="att-modal-body">
+        <div class="table-container">
+            <table class="att-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>In Time</th>
+                        <th>Out Time</th>
+                        <th>Edit</th>
+                    </tr>
+                </thead>
+                <tbody id="attTableBody">
+                    <!-- JS injects rows -->
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 </div>
 
             <!-- breakmanagement section -->
@@ -426,9 +426,7 @@
                         <div class="bm-card bm-highlight-card">
                             <div class="bm-highlight-content">
                                 <h3>Break Policy</h3>
-                                <p>Lunch is strictly 45 mins. Normal breaks are 15 mins. Exceeding limits will be
-                                    deducted from work hours.</p>
-                                <button class="bm-btn bm-btn-small-white">View Policy</button>
+                                <p>Lunch break is limited to 45 minutes, and short breaks are limited to 15 minutes each. Employees are expected to return to work within these allowed time limits. If the break duration exceeds the permitted time, the extra time will be added to the employee’s working hours, and their workday will be extended accordingly. Repeated violations may be subject to review by management.</p>
                             </div>
                         </div>
 

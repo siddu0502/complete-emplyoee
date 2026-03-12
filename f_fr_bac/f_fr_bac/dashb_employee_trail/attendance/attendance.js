@@ -820,3 +820,145 @@ fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
     document.head.appendChild(style);
 
 });
+
+
+// attendance calender section
+document.addEventListener("DOMContentLoaded", () => {
+    // Elements
+    const modalEls = {
+        overlay: document.getElementById("attModal"),
+        closeBtn: document.getElementById("attCloseBtn"),
+        tableBody: document.getElementById("attTableBody"),
+        
+        // Dropdowns
+        monthSelect: document.getElementById("navMonthSelect"),
+        yearSelect: document.getElementById("navYearSelect")
+    };
+
+    const STORAGE_KEY_HISTORY = "att_history_log"; 
+    let currentModalDate = new Date(); // State
+
+    // --- 1. Initialize Dropdowns ---
+    function initDropdowns() {
+        if (!modalEls.monthSelect || !modalEls.yearSelect) return;
+
+        // Populate Months (Jan - Dec)
+        const monthNames = ["January", "February", "March", "April", "May", "June", 
+                            "July", "August", "September", "October", "November", "December"];
+        
+        modalEls.monthSelect.innerHTML = "";
+        monthNames.forEach((m, index) => {
+            const opt = document.createElement("option");
+            opt.value = index; // 0-11
+            opt.text = m;
+            modalEls.monthSelect.appendChild(opt);
+        });
+
+        // Populate Years (Current Year +/- 5)
+        const currentYear = new Date().getFullYear();
+        modalEls.yearSelect.innerHTML = "";
+        for (let y = currentYear - 5; y <= currentYear + 5; y++) {
+            const opt = document.createElement("option");
+            opt.value = y;
+            opt.text = y;
+            modalEls.yearSelect.appendChild(opt);
+        }
+    }
+
+    // --- 2. Update UI to Match State ---
+    function updateDropdownsUI() {
+        if (modalEls.monthSelect) {
+            modalEls.monthSelect.value = currentModalDate.getMonth();
+        }
+        if (modalEls.yearSelect) {
+            modalEls.yearSelect.value = currentModalDate.getFullYear();
+        }
+    }
+
+    // --- 3. Load Data & Filter ---
+    function loadHistoryTable() {
+        const history = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY)) || {};
+        
+        if (modalEls.tableBody) modalEls.tableBody.innerHTML = "";
+        
+        // Ensure UI matches state before filtering
+        updateDropdownsUI();
+
+        // Filter Logic
+        const targetYear = currentModalDate.getFullYear();
+        const targetMonth = currentModalDate.getMonth();
+
+        const rows = Object.values(history)
+            .map(r => ({ ...r, dateObj: new Date(r.date) }))
+            .filter(r => {
+                return !isNaN(r.dateObj) && 
+                       r.dateObj.getFullYear() === targetYear && 
+                       r.dateObj.getMonth() === targetMonth;
+            })
+            .sort((a, b) => b.dateObj - a.dateObj); // Sort Newest First
+
+        // Handle Empty State
+        if (rows.length === 0) {
+            const monthName = currentModalDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+            if (modalEls.tableBody) {
+                modalEls.tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">No records found for ${monthName}.</td></tr>`;
+            }
+            return;
+        }
+
+        // Render Rows
+        rows.forEach(row => {
+            const tr = document.createElement("tr");
+            let badgeClass = row.status.toLowerCase().includes('absent') ? 'status-absent' : 'status-present';
+            const dateStr = row.dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            tr.innerHTML = `
+                <td>${dateStr}</td>
+                <td><span class="status-pill ${badgeClass}">${row.status}</span></td>
+                <td style="font-family:monospace;">${row.inTime}</td>
+                <td style="font-family:monospace;">${row.outTime}</td>
+                <td><button class="btn-icon-small"><i class="fa-solid fa-pen"></i></button></td>
+            `;
+            modalEls.tableBody.appendChild(tr);
+        });
+    }
+
+    // --- 4. Event Listeners ---
+
+    // Month Change
+    if (modalEls.monthSelect) {
+        modalEls.monthSelect.addEventListener("change", (e) => {
+            currentModalDate.setMonth(parseInt(e.target.value));
+            loadHistoryTable();
+        });
+    }
+
+    // Year Change
+    if (modalEls.yearSelect) {
+        modalEls.yearSelect.addEventListener("change", (e) => {
+            currentModalDate.setFullYear(parseInt(e.target.value));
+            loadHistoryTable();
+        });
+    }
+
+    // Open Modal Button
+    const viewBtn = document.getElementById("viewAttBtn");
+    if (viewBtn) {
+        viewBtn.addEventListener("click", () => {
+            currentModalDate = new Date(); // Reset to today
+            initDropdowns(); // Re-populate if needed
+            loadHistoryTable();
+            if(modalEls.overlay) modalEls.overlay.classList.add("show");
+        });
+    }
+
+    // Close Modal
+    const closeModal = () => {
+        if(modalEls.overlay) modalEls.overlay.classList.remove("show");
+    };
+    if (modalEls.closeBtn) modalEls.closeBtn.addEventListener("click", closeModal);
+    window.addEventListener("click", (e) => { if (e.target === modalEls.overlay) closeModal(); });
+
+    // Initial Init
+    initDropdowns();
+});

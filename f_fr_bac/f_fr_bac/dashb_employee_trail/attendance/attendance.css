@@ -815,6 +815,102 @@
   text-transform: uppercase;
 }
 
+
+/* attendance calender section */
+/* --- CUSTOM MONTH PICKER STYLE --- */
+.custom-month-picker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f8f9fa;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+#pickerLabel {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    min-width: 100px; /* Prevents jumping when text changes */
+}
+
+.picker-icon-wrapper {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.picker-icon-wrapper:hover {
+    background: #e9ecef;
+}
+
+.picker-icon-wrapper i {
+    font-size: 16px;
+    color: #120a05; /* Orange Icon */
+    pointer-events: none; /* Let clicks pass through to input */
+}
+
+/* The Secret Sauce: Invisible Input covering the icon */
+.hidden-month-input {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0; /* Invisible */
+    cursor: pointer;
+    z-index: 10; /* On Top */
+}
+
+/* --- CUSTOM NAV CONTROLS --- */
+/* --- CUSTOM DUAL DROPDOWNS --- */
+.custom-cal-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.nav-select {
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    outline: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: 0.2s;
+    appearance: none; /* Removes default arrow in some browsers for cleaner look */
+}
+
+/* Hover Effect */
+.nav-select:hover {
+    background: #e9ecef;
+}
+
+/* Specific styling for Year to stand out */
+.year-select {
+    color: #0d0703; /* Orange */
+    font-weight: 700;
+}
+
+/* Add a subtle separator if needed */
+.month-select {
+    border-right: 1px solid #e0e0e0;
+    padding-right: 12px;
+}
+
+
 /* The Days Grid */
 .days-grid {
   display: grid;
