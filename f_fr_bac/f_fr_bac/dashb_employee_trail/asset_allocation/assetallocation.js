@@ -1,230 +1,139 @@
+// ==========================================
+// 1. CONFIGURATION & GLOBAL VARIABLES
+// ==========================================
 
-const emp_id = "123";
-console.log("Employee ID from localStorage:", emp_id);
-document.addEventListener('DOMContentLoaded', () => {
-    fetch(`http://127.0.0.1:8000/api/employee-assets/${emp_id}/`)
-        .then(res => {
-            if (!res.ok) {
-                throw new Error("Dashboard API failed");
-            }
-            return res.json();
-        })
-        .then(data => {
-            console.log(data)
+const API_BASE_URL = "http://127.0.0.1:8000"; 
 
-            document.getElementById("name").innerText = data.name;
-            document.getElementById("role").innerText = data.role;
+// 1. Get the ID saved by your Login script
+const EMP_ID = localStorage.getItem("employee_id"); 
 
-            loadEmployeeAssets(emp_id);
-        })
-        .catch(error => {
-            console.error("Dashboard API error:", error);
-        });
+// 2. Initialize Name/Role (Will update these from API in a moment)
+let EMP_NAME = localStorage.getItem("emp_name") || "Employee"; 
+let EMP_ROLE = localStorage.getItem("emp_role") || "Associate Software Engineer";
 
-    // --- 1. Sidebar Toggles ---
-    const sidebar = document.getElementById('ast-sidebar');
-    const toggleBtn = document.getElementById('ast-sidebar-toggle');
-    const mobileBtn = document.getElementById('ast-mobile-menu-btn');
-
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('ast-collapsed');
-        });
-    }
-
-    if (mobileBtn) {
-        mobileBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('ast-mobile-active');
-        });
-    }
-
-    // Close sidebar when clicking outside on mobile
-    document.addEventListener('click', (e) => {
-        if (window.innerWidth <= 992 && sidebar.classList.contains('ast-mobile-active')) {
-            if (!sidebar.contains(e.target) && !mobileBtn.contains(e.target)) {
-                sidebar.classList.remove('ast-mobile-active');
-            }
-        }
-    });
-
-    // --- 2. Filter Table Logic ---
-    const filterSelect = document.getElementById('ast-filter-type');
-    const tableRows = document.querySelectorAll('#ast-table-body tr');
-
-    if (filterSelect) {
-        filterSelect.addEventListener('change', (e) => {
-            const filterValue = e.target.value.toLowerCase();
-
-            tableRows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                // Simple filter logic
-                if (filterValue === 'all' || text.includes(filterValue)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
-    }
-});
-let assetChart = null;
-
-function renderAssetChart(assets) {
-
-    // Always show these asset types
-    const assetTypes = ["Laptop", "Monitor", "Keyboard", "Mouse", "Phone"];
-
-    // Initialize counts
-    const assetCount = {
-        Laptop: 0,
-        Monitor: 0,
-        Keyboard: 0,
-        Mouse: 0,
-        Phone: 0
-    };
-
-    // Count assets from backend
-    assets.forEach(asset => {
-        const type = asset.asset_type;
-
-        if (assetCount[type] !== undefined) {
-            assetCount[type]++;
-        }
-    });
-
-    // Prepare chart data
-    const labels = assetTypes;
-    const values = assetTypes.map(type => assetCount[type]);
-
-    // Calculate dynamic Y-axis max
-    const maxValue = Math.max(...values);
-    const chartMax = Math.ceil(maxValue / 15) * 15 || 15;
-
-    const ctx = document.getElementById("ast-main-chart");
-
-    // Destroy old chart if exists
-    if (assetChart) {
-        assetChart.destroy();
-    }
-
-    assetChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: labels,
-            datasets: [{
-                label: "Assets",
-                data: values,
-                backgroundColor: [
-                    "#FF5B1E",
-                    "#164E63",
-                    "#FCD34D",
-                    "#10B981",
-                    "#6366F1"
-                ],
-                borderRadius: 6,
-                barThickness: 40
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    enabled: true
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: chartMax,
-                    ticks: {
-                        stepSize: 15,
-                        precision: 0
-                    },
-                    grid: {
-                        color: "#f3f4f6"
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
-            }
-        }
-    });
-
-}
-
-
-
-function openAssetPopup() {
-    document.getElementById("assetReturnPopup").style.display = "flex";
-
-}
-function closeAssetReturn() {
-    document.getElementById("assetReturnPopup").style.display = "none";
-}
-function submitAssetReturn() {
-    const emp_id = "123"
-    const emp_name = document.getElementById("name").innerText;
-    const asset = document.getElementById("assetType").value;
-    const condition = document.getElementById("assetCondition").value;
-    const reason = document.getElementById("assetreason").value;
-
-    if (!asset) {
-        showToast("error", "Please fill all fields");
+document.addEventListener("DOMContentLoaded", async () => {
+    
+    // Check Login
+    if (!EMP_ID) {
+        window.location.href = "../employee_login/emp_login.html"; 
         return;
     }
 
-    fetch("http://127.0.0.1:8000/api/asset-return/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        }, body: JSON.stringify({
-            emp_id: emp_id,
-            employee_name: emp_name,
-            asset_type: asset,
-            condition: condition,
-            description: reason
+    console.log(`Logged in as ID: ${EMP_ID}. Fetching Profile Name...`);
 
-        })
-    })
-        .then(res => res.json())
-        .then(data => {
+    // --- STEP 1: FETCH REAL NAME FROM BACKEND ---
+    await fetchEmployeeProfile(EMP_ID);
 
-            console.log(data);
+    // --- STEP 2: LOAD ASSETS ---
+    loadEmployeeAssets(EMP_ID);
+});
 
-        })
+// ==========================================
+// 2. FETCH PROFILE (GET NAME)
+// ==========================================
 
+async function fetchEmployeeProfile(id) {
+    try {
+        // We call the dashboard API to get the name associated with this ID
+        const response = await fetch(`${API_BASE_URL}/api/employee/dashboard/${id}/`);
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            // 1. Update Global Variable
+            if(data.name) EMP_NAME = data.name;
+            if(data.role) EMP_ROLE = data.role;
 
+            console.log("Updated Name:", EMP_NAME);
 
+            // 2. Update Sidebar & Header UI
+            document.querySelectorAll("#name").forEach(el => el.innerText = EMP_NAME);
+            
+            const roleEl = document.getElementById("role");
+            if(roleEl) roleEl.innerText = EMP_ROLE;
 
-    showToast("success", "Asset return submitted");
-    document.getElementById("assetType").value = ""
-    document.getElementById("assetCondition").value = ""
-    document.getElementById("assetreason").value = ""
-    closeAssetReturn()
+            const idEl = document.getElementById("employee_id");
+            if(idEl) idEl.innerText = id;
+            
+            // 3. Update Request Popup Name (if it exists)
+            const popupName = document.querySelector("#assetRequest #name");
+            if(popupName) popupName.innerText = EMP_NAME;
 
+        }
+    } catch (error) {
+        console.error("Could not fetch profile name:", error);
+    }
 }
+
+// ==========================================
+// 3. FETCH & RENDER ASSETS
+// ==========================================
+
+async function loadEmployeeAssets(id) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/employee-assets/${id}/`);
+
+        if (!response.ok) throw new Error("Failed to fetch assets");
+
+        const data = await response.json();
+        
+        renderAssetChart(data);
+
+        const tableBody = document.getElementById("ast-table-body");
+        tableBody.innerHTML = "";
+
+        if (data.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px;">No assets allocated</td></tr>`;
+            return;
+        }
+
+        data.forEach(asset => {
+            let badgeClass = "ast-badge-active"; 
+            if (asset.status === "returned") badgeClass = "ast-badge-returned"; 
+
+            const row = `
+            <tr>
+                <td>
+                    <div class="ast-row-info">
+                        <div class="ast-icon-box">
+                            <i class="fa-solid fa-laptop"></i>
+                        </div>
+                        <div>
+                            <strong>${asset.asset_type}</strong>
+                            <span>${asset.model_details}</span>
+                        </div>
+                    </div>
+                </td>
+                <td>${asset.asset_id}</td>
+                <td>${asset.assigned_date}</td>
+                <td><span class="ast-badge ${badgeClass}">${asset.status}</span></td>
+            </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+
+    } catch (error) {
+        console.error("Error loading assets:", error);
+    }
+}
+
+
+// ==========================================
+// 4. ASSET REQUEST LOGIC (POST)
+// ==========================================
 
 function openAssetRequest() {
     document.getElementById("assetRequest").style.display = "flex";
+    // Ensure name is visible in popup
+    const popupName = document.querySelector("#assetRequest #name");
+    if(popupName) popupName.innerText = EMP_NAME;
 }
 
 function closeAssetRequest() {
     document.getElementById("assetRequest").style.display = "none";
 }
+
 function submitAssetRequest() {
-
-
-
-    const emp_id = "123";
-    const emp_name = document.getElementById("name").innerText;
-
     const Asset_catagory = document.getElementById("AssetCategory").value;
     const Asset_Des = document.getElementById("assetDes").value;
     const Asset_loc = document.getElementById("assetLocation").value;
@@ -234,46 +143,142 @@ function submitAssetRequest() {
         return;
     }
 
-    fetch("http://127.0.0.1:8000/api/asset-request/", {
+    const payload = {
+        emp_id: EMP_ID, 
+        employee_name: EMP_NAME, // Uses the fetched name
+        asset_category: Asset_catagory,
+        description: Asset_Des,
+        location: Asset_loc,
+        status: "Pending"
+    };
 
+    fetch(`${API_BASE_URL}/api/asset-request/`, {
         method: "POST",
-
-        headers: {
-            "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify({
-
-            emp_id: emp_id,
-            employee_name: emp_name,
-            asset_category: Asset_catagory,
-            description: Asset_Des,
-            location: Asset_loc
-
-        })
-
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
     })
-        .then(res => res.json())
-        .then(data => {
-
-            console.log(data);
-
-            showToast("success", "Asset request sent to admin");
-
-            document.getElementById("AssetCategory").value = "";
-            document.getElementById("assetDes").value = "";
-            document.getElementById("assetLocation").value = "";
-
-            closeAssetRequest();
-
-        })
-        .catch(err => {
-            console.error(err);
-            showToast("error", "Request failed");
-        });
+    .then(res => {
+        if (!res.ok) throw new Error("Request failed");
+        return res.json();
+    })
+    .then(data => {
+        showToast("success", "Asset request sent");
+        closeAssetRequest();
+        document.getElementById("AssetCategory").value = "";
+        document.getElementById("assetDes").value = "";
+        document.getElementById("assetLocation").value = "";
+    })
+    .catch(err => {
+        console.error(err);
+        showToast("error", "Failed to send request");
+    });
 }
-function showToast(type, message) {
 
+
+// ==========================================
+// 5. ASSET RETURN LOGIC (POST)
+// ==========================================
+
+function openAssetPopup() {
+    document.getElementById("assetReturnPopup").style.display = "flex";
+}
+
+function closeAssetReturn() {
+    document.getElementById("assetReturnPopup").style.display = "none";
+}
+
+function submitAssetReturn() {
+    const asset = document.getElementById("assetType").value;
+    const condition = document.getElementById("assetCondition").value;
+    const reason = document.getElementById("assetreason").value;
+
+    if (!asset || !condition || !reason) {
+        showToast("error", "Please fill all fields");
+        return;
+    }
+
+    const payload = {
+        emp_id: EMP_ID,
+        employee_name: EMP_NAME, // Uses the fetched name
+        asset_type: asset,
+        condition: condition,
+        description: reason,
+        status: "Pending"
+    };
+
+    fetch(`${API_BASE_URL}/api/asset-return/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Return Request failed");
+        return res.json();
+    })
+    .then(data => {
+        showToast("success", "Return request sent");
+        closeAssetReturn();
+        document.getElementById("assetType").value = "";
+        document.getElementById("assetCondition").value = "";
+        document.getElementById("assetreason").value = "";
+    })
+    .catch(err => {
+        console.error(err);
+        showToast("error", "Failed to submit return");
+    });
+}
+
+
+// ==========================================
+// 6. CHART & UI HELPERS
+// ==========================================
+
+let assetChart = null;
+
+function renderAssetChart(assets) {
+    const assetTypes = ["Laptop", "Monitor", "Keyboard", "Mouse", "Phone"];
+    const assetCount = { Laptop: 0, Monitor: 0, Keyboard: 0, Mouse: 0, Phone: 0 };
+
+    assets.forEach(asset => {
+        const type = Object.keys(assetCount).find(key => key.toLowerCase() === asset.asset_type.toLowerCase());
+        if (type) assetCount[type]++;
+    });
+
+    const labels = assetTypes;
+    const values = assetTypes.map(type => assetCount[type]);
+    const maxValue = Math.max(...values);
+    const chartMax = maxValue > 0 ? Math.ceil(maxValue / 5) * 5 : 5; 
+
+    const ctx = document.getElementById("ast-main-chart");
+    if (!ctx) return; 
+
+    if (assetChart) assetChart.destroy();
+
+    assetChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Assets",
+                data: values,
+                backgroundColor: ["#FF5B1E", "#164E63", "#FCD34D", "#10B981", "#6366F1"],
+                borderRadius: 6,
+                barThickness: 30
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, max: chartMax, grid: { color: "#f3f4f6" } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+function showToast(type, message) {
     const toast = document.getElementById("popupToast");
     const icon = document.getElementById("toastIcon");
     const title = document.getElementById("toastTitle");
@@ -292,63 +297,24 @@ function showToast(type, message) {
     }
 
     msg.innerText = message;
-
     toast.classList.add("show");
 
     setTimeout(() => {
         toast.classList.remove("show");
     }, 3000);
 }
-async function loadEmployeeAssets(emp_id) {
 
-    try {
-        const response = await fetch(
-            `http://127.0.0.1:8000/api/employee-assets/${emp_id}/`
-        );
+// Sidebar Logic
+const sidebar = document.getElementById('sidebar');
+const mobileBtn = document.getElementById('mobileMenuBtn'); 
 
-        const data = await response.json();
-        console.log("Employee Assets:", data);
-        renderAssetChart(data);
+if (mobileBtn) {
+    mobileBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('active'); 
+    });
+}
 
-        const tableBody = document.getElementById("ast-table-body");
-        tableBody.innerHTML = "";
-
-        if (data.length === 0) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="5">No assets allocated</td>
-                </tr>
-            `;
-            return;
-        }
-
-
-        data.forEach(asset => {
-
-            const row = `
-<tr>
-<td>
-    <div class="ast-row-info">
-        <div class="ast-icon-box">
-            <i class="fa-solid fa-laptop"></i>
-        </div>
-        <div>
-            <strong>${asset.asset_type}</strong>
-            <span>${asset.model_details}</span>
-        </div>
-    </div>
-</td>
-<td>${asset.emp_id}</td>
-<td>${asset.assigned_date}</td>
-<td><span class="ast-badge ast-badge-active">${asset.status}</span></td>
-
-</tr>
-`;
-
-            tableBody.innerHTML += row;
-        });
-
-    } catch (error) {
-        console.error("Error loading assets:", error);
-    }
+function logoutUser(){
+    localStorage.clear();
+    window.location.href = "../employee_login/emp_login.html";
 }
