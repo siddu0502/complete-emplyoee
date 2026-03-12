@@ -2,9 +2,9 @@
 
 
 document.addEventListener("DOMContentLoaded", () => {
-const emp_id = localStorage.getItem('employee_id')   // ==========================================
+const emp_id = localStorage.getItem('employee_id')   
     // 1. CONFIGURATION & STATE
-    // ==========================================
+    
     fetch(`http://13.60.26.193:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
