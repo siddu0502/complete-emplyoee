@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
 const emp_id = localStorage.getItem('employee_id')   
     // 1. CONFIGURATION & STATE
     
-    fetch(`http://13.60.26.193:8000/api/employee/dashboard/${emp_id}/`)
+    fetch(`http://127.0.0.1:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
             console.log(data)
@@ -367,7 +367,7 @@ punchBtn.addEventListener("click", () => {
 
     if (!isWorking && !isOnBreak && totalWorkMs === 0) {
 
-        fetch("http://13.60.26.193:8000/api/employee-attendence/create/", {
+        fetch("http://127.0.0.1:8000/api/employee-attendence/create/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: emp_id })
@@ -397,7 +397,7 @@ punchBtn.addEventListener("click", () => {
     }
 
     else if (isWorking) {
-        fetch("http://13.60.26.193:8000/api/employee-attendence/checkout/", {
+        fetch("http://127.0.0.1:8000/api/employee-attendence/checkout/", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id: emp_id })
@@ -461,7 +461,7 @@ punchBtn.addEventListener("click", () => {
 
 window.addEventListener("load", () => {
 
-fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
+fetch(`http://127.0.0.1:8000/api/attendence-status/${emp_id}/`)
 .then(res => res.json())
 .then(data => {
 
@@ -637,7 +637,7 @@ fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
         modalLabel.innerText = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
     }
 
-    const res = await fetch(`http://13.60.26.193:8000/api/employee-attendence-history/${emp_id}/`);
+    const res = await fetch(`http://127.0.0.1:8000/api/employee-attendence-history/${emp_id}/`);
     const data = await res.json();
 
     calEls.tableBody.innerHTML = "";
@@ -746,50 +746,78 @@ fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
     });
 
     // B. Save Button
+        // ==========================================
+    // B. SAVE BUTTON (SEND REQUEST TO BACKEND)
+    // ==========================================
     const saveEditBtn = document.getElementById("saveEditBtn");
     if (saveEditBtn) {
         saveEditBtn.addEventListener("click", () => {
             if (!editingDateKey) return;
-            const inTimeInput = document.getElementById("editInTime");
-            const outTimeInput = document.getElementById("editOutTime");
-            const inAmpm = document.getElementById("editInAMPM");
-            const outAmpm = document.getElementById("editOutAMPM");
-            const statusInput = document.getElementById("editStatus");
 
-            // time formatting helper
-            function formatWithAMPM(timeVal, ampmVal) {
-                if (!timeVal) return "";
-                let [h, m] = timeVal.split(":");
-                h = parseInt(h, 10);
-                if (ampmVal === 'PM' && h < 12) h += 12;
-                if (ampmVal === 'AM' && h === 12) h = 0;
-                const d = new Date();
-                d.setHours(h, parseInt(m, 10));
-                return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            // 1. Get Values
+            const inTimeVal = document.getElementById("editInTime").value;
+            const inAmpm = document.getElementById("editInAMPM").value;
+            const outTimeVal = document.getElementById("editOutTime").value;
+            const outAmpm = document.getElementById("editOutAMPM").value;
+            const reasonVal = document.getElementById("editReason").value;
+
+            if (!reasonVal) {
+                alert("Please provide a reason for this correction.");
+                return;
             }
 
-            const newStatus = statusInput ? statusInput.value : "Present";
-            const newIn = formatWithAMPM(inTimeInput.value, inAmpm ? inAmpm.value : 'AM');
-            const newOut = formatWithAMPM(outTimeInput.value, outAmpm ? outAmpm.value : 'AM');
+            // 2. Helper to Convert Time Input + Dropdown to 24-Hour Format (HH:MM:00)
+            function to24Hour(timeStr, ampm) {
+                if (!timeStr) return null;
+                let [hours, minutes] = timeStr.split(':');
+                hours = parseInt(hours);
 
-            // update cache
-            attendanceCache[editingDateKey] = { status: newStatus, inTime: newIn, outTime: newOut };
+                if (ampm === "PM" && hours < 12) hours += 12;
+                if (ampm === "AM" && hours === 12) hours = 0;
 
-            // update row display if present
-            const rowBtn = document.querySelector(`.btn-edit-row[data-date="${editingDateKey}"]`);
-            if (rowBtn) {
-                const row = rowBtn.closest('tr');
-                if (row) {
-                    row.cells[1].innerText = newStatus;
-                    row.cells[2].innerText = newIn || '-';
-                    row.cells[3].innerText = newOut || '-';
-                }
+                return `${String(hours).padStart(2, '0')}:${minutes}:00`;
             }
 
-            closeEditModal();
+            const finalInTime = to24Hour(inTimeVal, inAmpm);
+            const finalOutTime = to24Hour(outTimeVal, outAmpm);
+
+            // 3. Prepare Payload
+            // Note: 'employee' field expects the Database ID (emp_id variable from top of file)
+            const payload = {
+                employee: emp_id, 
+                date: editingDateKey,
+                clock_in: finalInTime,
+                clock_out: finalOutTime,
+                reason: reasonVal,
+                status: "Pending"
+            };
+
+            console.log("Sending Request:", payload);
+
+            // 4. Send to Backend
+            fetch("http://127.0.0.1:8000/api/attendance-request/create/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to submit request");
+                return res.json();
+            })
+            .then(data => {
+                alert("Correction Request Sent to Admin!");
+                closeEditModal();
+                // Optionally reload to reset UI
+                // loadHistoryTable(); 
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Error sending request. Check console.");
+            });
         });
     }
-
     // C. Cancel Button
     const cancelEditBtn = document.getElementById("cancelEditBtn");
     if (cancelEditBtn) {

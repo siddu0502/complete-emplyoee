@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
      const emp_id = localStorage.getItem('employee_id')
    
     console.log(emp_id)
-fetch(`http://13.60.26.193:8000/api/employee/dashboard/${emp_id}/`)
+fetch(`http://127.0.0.1:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
             console.log(data)
@@ -164,7 +164,7 @@ fetch(`http://13.60.26.193:8000/api/employee/dashboard/${emp_id}/`)
         city: document.getElementById('input_city').value
     };
 
-    fetch(`http://13.60.26.193:8000/api/update-employee/${emp_id}/`, {
+    fetch(`http://127.0.0.1:8000/api/update-employee/${emp_id}/`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileData)
@@ -235,7 +235,7 @@ fetch(`http://13.60.26.193:8000/api/employee/dashboard/${emp_id}/`)
                 gender: document.getElementById('input_other_gender').value,
                 dob: document.getElementById('input_other_dob').value,
             }
-             fetch(`http://13.60.26.193:8000/api/update-employee/${emp_id}/`, {
+             fetch(`http://127.0.0.1:8000/api/update-employee/${emp_id}/`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileData)
