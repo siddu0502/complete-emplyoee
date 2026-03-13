@@ -1,4 +1,69 @@
+/**
+ * Displays a custom animated alert modal matching the dashboard theme.
+ * @param {string} message - The text to display.
+ * @param {string} type - 'warning', 'error', or 'success'.
+ */
+function showCustomAlert(message, type = 'warning') {
+    // Prevent multiple alerts stacking
+    if (document.querySelector('.custom-alert-overlay')) return;
 
+    // Theme Config
+    const colors = {
+        warning: '#ff6b00', // Orange
+        error:   '#ef4444', // Red
+        success: '#10b981'  // Green
+    };
+    const icons = {
+        warning: 'fa-triangle-exclamation',
+        error:   'fa-circle-xmark',
+        success: 'fa-circle-check'
+    };
+    const accentColor = colors[type] || colors.warning;
+    const iconClass = icons[type] || icons.warning;
+
+    // Inject CSS if not exists
+    if (!document.getElementById('custom-alert-style')) {
+        const style = document.createElement('style');
+        style.id = 'custom-alert-style';
+        style.innerHTML = `
+            .custom-alert-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
+            .custom-alert-card { background: #fff; padding: 25px 30px; border-radius: 12px; width: 90%; max-width: 360px; text-align: center; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-top: 5px solid ${accentColor}; box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
+            .custom-alert-icon { font-size: 2.5rem; color: ${accentColor}; margin-bottom: 15px; }
+            .custom-alert-msg { font-size: 1rem; color: #333; margin-bottom: 20px; line-height: 1.4; font-weight: 500; }
+            .custom-alert-btn { background: ${accentColor}; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; width: 100%; transition: opacity 0.2s; }
+            .custom-alert-btn:hover { opacity: 0.9; }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Create DOM Elements
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-alert-overlay';
+    overlay.innerHTML = `
+        <div class="custom-alert-card">
+            <div class="custom-alert-icon"><i class="fa-solid ${iconClass}"></i></div>
+            <p class="custom-alert-msg">${message}</p>
+            <button class="custom-alert-btn">Okay</button>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Animate In
+    requestAnimationFrame(() => {
+        overlay.style.opacity = '1';
+        overlay.querySelector('.custom-alert-card').style.transform = 'scale(1)';
+    });
+
+    // Close Handler
+    const close = () => {
+        overlay.style.opacity = '0';
+        overlay.querySelector('.custom-alert-card').style.transform = 'scale(0.8)';
+        setTimeout(() => overlay.remove(), 300);
+    };
+    overlay.querySelector('.custom-alert-btn').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) close(); });
+}
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -268,56 +333,94 @@ const emp_id = localStorage.getItem('employee_id')
     // 5. BREAK TIMER LOGIC
     // ==========================================
 
-    if (bmEls.btnIn) {
+        if (bmEls.btnIn) {
         bmEls.btnIn.addEventListener("click", () => {
+            
+            // --- VALIDATION STEP ---
+            // Check if user has actually punched in for work yet
             if (!isWorking && totalWorkMs === 0) {
-                alert("Please Punch In first to start work!");
+                showCustomAlert("Please Punch In to start work before taking a break!", "warning");
                 return;
             }
 
-            // 1. Pause Work Timer
-            pauseWorkTimer();
+            // --- 1. STOP WORK / START BREAK STATE ---
+            pauseWorkTimer(); // Stops the main work timer
+            
+            // Update Main Status Message
             statusMsg.innerHTML = `<i class="fa-solid fa-mug-hot"></i> On Break...`;
-            statusMsg.style.color = "#FF5B1E"; // Orange
+            statusMsg.style.color = "#FF5B1E"; // Orange Theme
+            
+            // Set State Flags
             isOnBreak = true;
+            isWorking = false; // Ensure work flag is false while on break
 
-            // 2. Start Break Logic
+            // --- 2. INITIALIZE BREAK DATA ---
             breakStartTime = Date.now();
             currentBreakType = bmEls.breakSelect.value;
             const typeLabel = currentBreakType === "lunch" ? "Lunch Break" : "Normal Break";
 
-            // UI Swaps
+            // --- 3. UI UPDATES ---
+            // Swap Buttons
             bmEls.btnIn.style.display = "none";
             bmEls.btnOut.style.display = "flex";
-            bmEls.breakSelect.disabled = true;
-            punchBtn.disabled = true; // Cannot punch out during break
+            
+            // Disable Controls
+            bmEls.breakSelect.disabled = true; // Lock dropdown
+            if(punchBtn) punchBtn.disabled = true; // Lock Main Punch Out button
+            if(punchBtn) punchBtn.classList.add('disabled-btn'); // Optional CSS class for visual feedback
 
+            // Update Badge
             bmEls.statusBadge.textContent = `On ${typeLabel}`;
-            bmEls.statusBadge.className = "bm-badge bm-badge-primary";
+            bmEls.statusBadge.className = "bm-badge bm-badge-primary"; // Ensure this class has orange bg in CSS
 
+            // Reset Timer Display Color (in case it was red from previous break)
+            bmEls.timerDisplay.style.color = "#111"; 
+            bmEls.limitWarning.style.display = "none";
+
+            // Log Action
             addMainLog("Break Started", typeLabel);
 
-            // 3. Start Break Interval
+            // --- 4. START BREAK INTERVAL ---
+            // Clear any existing interval to prevent overlapping timers
             if (breakTimerInterval) clearInterval(breakTimerInterval);
+            
             breakTimerInterval = setInterval(() => {
                 const now = Date.now();
                 const currentBreakMs = now - breakStartTime;
-                const totalDisplayMs = totalBreakMs + currentBreakMs;
+                
+                // Calculate real-time totals
+                // Note: totalBreakMs should be the sum of PREVIOUS breaks, not including current
+                // If your totalBreakMs logic differs, adjust here.
+                const totalDisplayMs = totalBreakMs + currentBreakMs; 
 
-                // Update Break Timer Circle
-                const diffInSeconds = Math.floor(currentBreakMs / 1000);
+                // Update Timer Display (MM:SS)
                 bmEls.timerDisplay.textContent = formatTime(currentBreakMs);
 
-                // Check Limits
+                // --- LIMIT CHECKING LOGIC ---
+                const diffInSeconds = Math.floor(currentBreakMs / 1000);
                 const limitSec = LIMITS[currentBreakType];
-                const usedSec = usage[currentBreakType] + diffInSeconds;
+                
+                // Calculate used time (Previous usage of this type + current session)
+                // Ensure 'usage' object exists in your scope
+                const usedSec = (usage[currentBreakType] || 0) + diffInSeconds;
 
                 if (usedSec > limitSec) {
+                    // Over Limit Styling
                     bmEls.timerDisplay.style.color = "#d32f2f"; // Red
+                    bmEls.timerDisplay.style.fontWeight = "bold";
                     bmEls.limitWarning.style.display = "block";
+                    bmEls.limitWarning.textContent = "Time Limit Exceeded!";
+                } else {
+                    // Within Limit Styling
+                    bmEls.timerDisplay.style.color = "#111";
+                    bmEls.timerDisplay.style.fontWeight = "normal";
+                    bmEls.limitWarning.style.display = "none";
                 }
 
-                updateTimeline(); // Draws yellow segments
+                // Update Timeline Visualization
+                if (typeof updateTimeline === "function") {
+                    updateTimeline(); 
+                }
 
             }, 1000);
         });
