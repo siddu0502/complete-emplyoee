@@ -1,4 +1,69 @@
+/**
+ * Displays a custom animated alert modal matching the dashboard theme.
+ * @param {string} message - The text to display.
+ * @param {string} type - 'warning', 'error', or 'success'.
+ */
+function showCustomAlert(message, type = 'warning') {
+    // Prevent multiple alerts stacking
+    if (document.querySelector('.custom-alert-overlay')) return;
 
+    // Theme Config
+    const colors = {
+        warning: '#ff6b00', // Orange
+        error:   '#ef4444', // Red
+        success: '#10b981'  // Green
+    };
+    const icons = {
+        warning: 'fa-triangle-exclamation',
+        error:   'fa-circle-xmark',
+        success: 'fa-circle-check'
+    };
+    const accentColor = colors[type] || colors.warning;
+    const iconClass = icons[type] || icons.warning;
+
+    // Inject CSS if not exists
+    if (!document.getElementById('custom-alert-style')) {
+        const style = document.createElement('style');
+        style.id = 'custom-alert-style';
+        style.innerHTML = `
+            .custom-alert-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
+            .custom-alert-card { background: #fff; padding: 25px 30px; border-radius: 12px; width: 90%; max-width: 360px; text-align: center; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-top: 5px solid ${accentColor}; box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
+            .custom-alert-icon { font-size: 2.5rem; color: ${accentColor}; margin-bottom: 15px; }
+            .custom-alert-msg { font-size: 1rem; color: #333; margin-bottom: 20px; line-height: 1.4; font-weight: 500; }
+            .custom-alert-btn { background: ${accentColor}; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; width: 100%; transition: opacity 0.2s; }
+            .custom-alert-btn:hover { opacity: 0.9; }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Create DOM Elements
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-alert-overlay';
+    overlay.innerHTML = `
+        <div class="custom-alert-card">
+            <div class="custom-alert-icon"><i class="fa-solid ${iconClass}"></i></div>
+            <p class="custom-alert-msg">${message}</p>
+            <button class="custom-alert-btn">Okay</button>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Animate In
+    requestAnimationFrame(() => {
+        overlay.style.opacity = '1';
+        overlay.querySelector('.custom-alert-card').style.transform = 'scale(1)';
+    });
+
+    // Close Handler
+    const close = () => {
+        overlay.style.opacity = '0';
+        overlay.querySelector('.custom-alert-card').style.transform = 'scale(0.8)';
+        setTimeout(() => overlay.remove(), 300);
+    };
+    overlay.querySelector('.custom-alert-btn').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) close(); });
+}
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -268,56 +333,94 @@ const emp_id = localStorage.getItem('employee_id')
     // 5. BREAK TIMER LOGIC
     // ==========================================
 
-    if (bmEls.btnIn) {
+        if (bmEls.btnIn) {
         bmEls.btnIn.addEventListener("click", () => {
+            
+            // --- VALIDATION STEP ---
+            // Check if user has actually punched in for work yet
             if (!isWorking && totalWorkMs === 0) {
-                alert("Please Punch In first to start work!");
+                showCustomAlert("Please Punch In to start work before taking a break!", "warning");
                 return;
             }
 
-            // 1. Pause Work Timer
-            pauseWorkTimer();
+            // --- 1. STOP WORK / START BREAK STATE ---
+            pauseWorkTimer(); // Stops the main work timer
+            
+            // Update Main Status Message
             statusMsg.innerHTML = `<i class="fa-solid fa-mug-hot"></i> On Break...`;
-            statusMsg.style.color = "#FF5B1E"; // Orange
+            statusMsg.style.color = "#FF5B1E"; // Orange Theme
+            
+            // Set State Flags
             isOnBreak = true;
+            isWorking = false; // Ensure work flag is false while on break
 
-            // 2. Start Break Logic
+            // --- 2. INITIALIZE BREAK DATA ---
             breakStartTime = Date.now();
             currentBreakType = bmEls.breakSelect.value;
             const typeLabel = currentBreakType === "lunch" ? "Lunch Break" : "Normal Break";
 
-            // UI Swaps
+            // --- 3. UI UPDATES ---
+            // Swap Buttons
             bmEls.btnIn.style.display = "none";
             bmEls.btnOut.style.display = "flex";
-            bmEls.breakSelect.disabled = true;
-            punchBtn.disabled = true; // Cannot punch out during break
+            
+            // Disable Controls
+            bmEls.breakSelect.disabled = true; // Lock dropdown
+            if(punchBtn) punchBtn.disabled = true; // Lock Main Punch Out button
+            if(punchBtn) punchBtn.classList.add('disabled-btn'); // Optional CSS class for visual feedback
 
+            // Update Badge
             bmEls.statusBadge.textContent = `On ${typeLabel}`;
-            bmEls.statusBadge.className = "bm-badge bm-badge-primary";
+            bmEls.statusBadge.className = "bm-badge bm-badge-primary"; // Ensure this class has orange bg in CSS
 
+            // Reset Timer Display Color (in case it was red from previous break)
+            bmEls.timerDisplay.style.color = "#111"; 
+            bmEls.limitWarning.style.display = "none";
+
+            // Log Action
             addMainLog("Break Started", typeLabel);
 
-            // 3. Start Break Interval
+            // --- 4. START BREAK INTERVAL ---
+            // Clear any existing interval to prevent overlapping timers
             if (breakTimerInterval) clearInterval(breakTimerInterval);
+            
             breakTimerInterval = setInterval(() => {
                 const now = Date.now();
                 const currentBreakMs = now - breakStartTime;
-                const totalDisplayMs = totalBreakMs + currentBreakMs;
+                
+                // Calculate real-time totals
+                // Note: totalBreakMs should be the sum of PREVIOUS breaks, not including current
+                // If your totalBreakMs logic differs, adjust here.
+                const totalDisplayMs = totalBreakMs + currentBreakMs; 
 
-                // Update Break Timer Circle
-                const diffInSeconds = Math.floor(currentBreakMs / 1000);
+                // Update Timer Display (MM:SS)
                 bmEls.timerDisplay.textContent = formatTime(currentBreakMs);
 
-                // Check Limits
+                // --- LIMIT CHECKING LOGIC ---
+                const diffInSeconds = Math.floor(currentBreakMs / 1000);
                 const limitSec = LIMITS[currentBreakType];
-                const usedSec = usage[currentBreakType] + diffInSeconds;
+                
+                // Calculate used time (Previous usage of this type + current session)
+                // Ensure 'usage' object exists in your scope
+                const usedSec = (usage[currentBreakType] || 0) + diffInSeconds;
 
                 if (usedSec > limitSec) {
+                    // Over Limit Styling
                     bmEls.timerDisplay.style.color = "#d32f2f"; // Red
+                    bmEls.timerDisplay.style.fontWeight = "bold";
                     bmEls.limitWarning.style.display = "block";
+                    bmEls.limitWarning.textContent = "Time Limit Exceeded!";
+                } else {
+                    // Within Limit Styling
+                    bmEls.timerDisplay.style.color = "#111";
+                    bmEls.timerDisplay.style.fontWeight = "normal";
+                    bmEls.limitWarning.style.display = "none";
                 }
 
-                updateTimeline(); // Draws yellow segments
+                // Update Timeline Visualization
+                if (typeof updateTimeline === "function") {
+                    updateTimeline(); 
+                }
 
             }, 1000);
         });
@@ -746,50 +849,78 @@ fetch(`http://13.60.70.185:8000/api/attendence-status/${emp_id}/`)
     });
 
     // B. Save Button
+        // ==========================================
+    // B. SAVE BUTTON (SEND REQUEST TO BACKEND)
+    // ==========================================
     const saveEditBtn = document.getElementById("saveEditBtn");
     if (saveEditBtn) {
         saveEditBtn.addEventListener("click", () => {
             if (!editingDateKey) return;
-            const inTimeInput = document.getElementById("editInTime");
-            const outTimeInput = document.getElementById("editOutTime");
-            const inAmpm = document.getElementById("editInAMPM");
-            const outAmpm = document.getElementById("editOutAMPM");
-            const statusInput = document.getElementById("editStatus");
 
-            // time formatting helper
-            function formatWithAMPM(timeVal, ampmVal) {
-                if (!timeVal) return "";
-                let [h, m] = timeVal.split(":");
-                h = parseInt(h, 10);
-                if (ampmVal === 'PM' && h < 12) h += 12;
-                if (ampmVal === 'AM' && h === 12) h = 0;
-                const d = new Date();
-                d.setHours(h, parseInt(m, 10));
-                return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            // 1. Get Values
+            const inTimeVal = document.getElementById("editInTime").value;
+            const inAmpm = document.getElementById("editInAMPM").value;
+            const outTimeVal = document.getElementById("editOutTime").value;
+            const outAmpm = document.getElementById("editOutAMPM").value;
+            const reasonVal = document.getElementById("editReason").value;
+
+            if (!reasonVal) {
+                alert("Please provide a reason for this correction.");
+                return;
             }
 
-            const newStatus = statusInput ? statusInput.value : "Present";
-            const newIn = formatWithAMPM(inTimeInput.value, inAmpm ? inAmpm.value : 'AM');
-            const newOut = formatWithAMPM(outTimeInput.value, outAmpm ? outAmpm.value : 'AM');
+            // 2. Helper to Convert Time Input + Dropdown to 24-Hour Format (HH:MM:00)
+            function to24Hour(timeStr, ampm) {
+                if (!timeStr) return null;
+                let [hours, minutes] = timeStr.split(':');
+                hours = parseInt(hours);
 
-            // update cache
-            attendanceCache[editingDateKey] = { status: newStatus, inTime: newIn, outTime: newOut };
+                if (ampm === "PM" && hours < 12) hours += 12;
+                if (ampm === "AM" && hours === 12) hours = 0;
 
-            // update row display if present
-            const rowBtn = document.querySelector(`.btn-edit-row[data-date="${editingDateKey}"]`);
-            if (rowBtn) {
-                const row = rowBtn.closest('tr');
-                if (row) {
-                    row.cells[1].innerText = newStatus;
-                    row.cells[2].innerText = newIn || '-';
-                    row.cells[3].innerText = newOut || '-';
-                }
+                return `${String(hours).padStart(2, '0')}:${minutes}:00`;
             }
 
-            closeEditModal();
+            const finalInTime = to24Hour(inTimeVal, inAmpm);
+            const finalOutTime = to24Hour(outTimeVal, outAmpm);
+
+            // 3. Prepare Payload
+            // Note: 'employee' field expects the Database ID (emp_id variable from top of file)
+            const payload = {
+                employee: emp_id, 
+                date: editingDateKey,
+                clock_in: finalInTime,
+                clock_out: finalOutTime,
+                reason: reasonVal,
+                status: "Pending"
+            };
+
+            console.log("Sending Request:", payload);
+
+            // 4. Send to Backend
+            fetch("http://127.0.0.1:8000/api/attendance-request/create/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to submit request");
+                return res.json();
+            })
+            .then(data => {
+                alert("Correction Request Sent to Admin!");
+                closeEditModal();
+                // Optionally reload to reset UI
+                // loadHistoryTable(); 
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Error sending request. Check console.");
+            });
         });
     }
-
     // C. Cancel Button
     const cancelEditBtn = document.getElementById("cancelEditBtn");
     if (cancelEditBtn) {
