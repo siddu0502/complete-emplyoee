@@ -112,6 +112,16 @@
         </a>
       </li>
 
+      <!-- help desk -->
+             <li class="menu-item">
+              <a href="../help_desk/help_desk.html" class="menu-link">
+                <div class="link-left">
+                 <i class="fa-solid fa-headset"></i>
+                  <span>Help Desk</span>
+                </div>
+              </a>
+            </li>
+
     </ul>
   </div>
 </aside>
@@ -178,39 +188,43 @@
 
         <!-- 2. PROFILE COMPONENT -->
         <div class="db-widget-wrapper">
-            <!-- Profile Image Button -->
-            <button class="db-profile-trigger-btn" onclick="db_toggleProfile()">
-                <img src="../assets/profiledp.jpeg" alt="User">
-                <span class="db-online-dot"></span>
-            </button>
+    <!-- Profile Image Button (Trigger) -->
+    <button class="db-profile-trigger-btn" onclick="db_toggleProfile()">
+        <!-- Container for Small Avatar (Image or Initials) -->
+        <div id="db-trigger-avatar-box" class="db-avatar-box sm">
+            <img src="" alt="User" id="db-trigger-img" style="display: none;">
+        </div>
+        <span class="db-online-dot"></span>
+    </button>
 
-            <!-- Unique ID for Profile Dropdown -->
-            <div class="db-dropdown-card db-profile-card" id="db-profile-menu">
-                <!-- User Info Header -->
-                <div class="db-profile-header-info">
-                    <div class="db-user-avatar-lg">
-                        <img src="../assets/profiledp.jpeg" alt="User">
-                    </div>
-                    <div class="db-user-info-text">
-                        <h3 id="name"></h3>
-                        <p>Employee ID: <span id="employee_id"></span></p>
-                    </div>
-                </div>
-
-                <!-- Menu Links -->
-                <ul class="db-profile-nav-list">
-                    <li><a href="../dashboard/dashboard.html"><i class="fa-regular fa-user"></i> My Profile</a></li>
-                    
-                </ul>
-
-                <!-- Logout Section -->
-                <div class="db-logout-footer">
-                    <button class="db-logout-action-btn" onclick="db_logoutUser()">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
-                    </button>
-                </div>
+    <!-- Dropdown Card -->
+    <div class="db-dropdown-card db-profile-card" id="db-profile-menu">
+        <!-- User Info Header -->
+        <div class="db-profile-header-info">
+            <!-- Container for Large Avatar (Image or Initials) -->
+            <div id="db-header-avatar-box" class="db-user-avatar-lg">
+                <img src="" alt="User" id="db-header-img" style="display: none;">
+            </div>
+            
+            <div class="db-user-info-text">
+                <h3 id="db-user-name">Loading...</h3>
+                <p>Employee ID: <span id="db-employee-id">...</span></p>
             </div>
         </div>
+
+        <!-- Menu Links -->
+        <ul class="db-profile-nav-list">
+            <li><a href="../dashboard/dashboard.html"><i class="fa-regular fa-user"></i> My Profile</a></li>
+        </ul>
+
+        <!-- Logout Section -->
+        <div class="db-logout-footer">
+            <button class="db-logout-action-btn" onclick="db_logoutUser()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            </button>
+        </div>
+    </div>
+</div>
          </div>
         
 

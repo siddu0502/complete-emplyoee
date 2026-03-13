@@ -324,7 +324,7 @@ opacity: 0.2;
 }
 
 .db-user-avatar-lg img {
-    width: 50px; height: 50px;
+    width: 52px; height: 50px;
     border-radius: 50%;
     object-fit: cover;
 }
@@ -345,7 +345,7 @@ opacity: 0.2;
     padding: 10px 20px;
     text-decoration: none;
     color: #555;
-    font-size: 14px;
+    font-size: 14px; 
     transition: 0.2s;
 }
 
@@ -697,4 +697,93 @@ opacity: 0.2;
   color: #999;
   cursor: pointer;
   font-size: 16px;
+}
+
+
+/* small profile section */
+/* --- Avatar Styling --- */
+
+/* Wrapper to ensure size consistency */
+.db-avatar-box {
+    position: relative;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Small Avatar (Trigger Button) */
+.db-avatar-box.sm {
+    width: 44px;
+    height: 45px;
+}
+
+/* Large Avatar (Inside Dropdown) */
+.db-user-avatar-lg {
+    width: 60px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px; /* Spacing for header info */
+}
+
+/* Standard Image Styling */
+.db-avatar-box img,
+.db-user-avatar-lg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* --- THE NEW INITIALS STYLING --- */
+.avatar-initials {
+    width: 100%;
+    height: 100%;
+    background-color: #ff6b00; /* Theme Orange */
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Font sizes for different containers */
+.db-avatar-box.sm .avatar-initials {
+    font-size: 16px; 
+}
+
+.db-user-avatar-lg .avatar-initials {
+    font-size: 24px; 
+}
+
+/* --- Dropdown Toggle (Required for functionality) --- */
+.db-dropdown-card {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 55px;
+    background: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border-radius: 12px;
+    width: 280px;
+    z-index: 1000;
+    padding: 15px;
+    border: 1px solid #eee;
+}
+
+.db-dropdown-card.show {
+    display: block;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
