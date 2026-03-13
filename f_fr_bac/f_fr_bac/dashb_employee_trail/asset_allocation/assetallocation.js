@@ -2,7 +2,7 @@
 const emp_id = "123";
 console.log("Employee ID from localStorage:", emp_id);
 document.addEventListener('DOMContentLoaded', () => {
-    fetch(`http://127.0.0.1:8000/api/employee-assets/${emp_id}/`)
+    fetch(`http://13.60.70.185:8000/api/employee-assets/${emp_id}/`)
         .then(res => {
             if (!res.ok) {
                 throw new Error("Dashboard API failed");
@@ -180,7 +180,7 @@ function submitAssetReturn() {
         return;
     }
 
-    fetch("http://127.0.0.1:8000/api/asset-return/", {
+    fetch("http://13.60.70.185:8000/api/asset-return/", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -234,7 +234,7 @@ function submitAssetRequest() {
         return;
     }
 
-    fetch("http://127.0.0.1:8000/api/asset-request/", {
+    fetch("http://13.60.70.185:8000/api/asset-request/", {
 
         method: "POST",
 
@@ -303,7 +303,7 @@ async function loadEmployeeAssets(emp_id) {
 
     try {
         const response = await fetch(
-            `http://127.0.0.1:8000/api/employee-assets/${emp_id}/`
+            `http://13.60.70.185:8000/api/employee-assets/${emp_id}/`
         );
 
         const data = await response.json();

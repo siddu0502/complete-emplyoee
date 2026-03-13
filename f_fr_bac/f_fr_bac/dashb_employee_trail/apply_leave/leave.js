@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // 1. CONFIG & GLOBAL VARS
     // =============================
     const emp_id = localStorage.getItem("employee_id");
-    const API_BASE = "http://13.60.26.193:8000/api/employee";
+    const API_BASE = "http://13.60.70.185:8000/api/employee";
 
     // Redirect if no ID found
     if (!emp_id) {

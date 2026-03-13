@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
 const emp_id = localStorage.getItem('employee_id')   
     // 1. CONFIGURATION & STATE
     
-    fetch(`http://13.60.26.193:8000/api/employee/dashboard/${emp_id}/`)
+    fetch(`http://13.60.70.185:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
             console.log(data)
@@ -367,7 +367,7 @@ punchBtn.addEventListener("click", () => {
 
     if (!isWorking && !isOnBreak && totalWorkMs === 0) {
 
-        fetch("http://13.60.26.193:8000/api/employee-attendence/create/", {
+        fetch("http://13.60.70.185:8000/api/employee-attendence/create/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: emp_id })
@@ -397,7 +397,7 @@ punchBtn.addEventListener("click", () => {
     }
 
     else if (isWorking) {
-        fetch("http://13.60.26.193:8000/api/employee-attendence/checkout/", {
+        fetch("http://13.60.70.185:8000/api/employee-attendence/checkout/", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id: emp_id })
@@ -461,7 +461,7 @@ punchBtn.addEventListener("click", () => {
 
 window.addEventListener("load", () => {
 
-fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
+fetch(`http://13.60.70.185:8000/api/attendence-status/${emp_id}/`)
 .then(res => res.json())
 .then(data => {
 
@@ -637,7 +637,7 @@ fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
         modalLabel.innerText = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
     }
 
-    const res = await fetch(`http://13.60.26.193:8000/api/employee-attendence-history/${emp_id}/`);
+    const res = await fetch(`http://13.60.70.185:8000/api/employee-attendence-history/${emp_id}/`);
     const data = await res.json();
 
     calEls.tableBody.innerHTML = "";
