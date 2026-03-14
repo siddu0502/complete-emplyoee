@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${formatDate(p.uploaded_at)}</td>
                     <td>${p.doc_type}</td>
                     <td>${p.description}</td>
-                    <td> <a href="http://127.0.0.1/${p.file}" target="_blank">View
+                    <td> <a href="http://127.0.0.1:8000/${p.file}" target="_blank">View
                     </a></td>
                 `;
                 documentstable.appendChild(row);
