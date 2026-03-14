@@ -531,13 +531,49 @@ window.addEventListener("click", function(e) {
 });
 
 // --- 4. LOGOUT FUNCTION ---
+// --- 1. Trigger the Modal (Replaces the old confirm alert) ---
 function db_logoutUser() {
-    // Add your logout logic here (clear localStorage, redirect, etc.)
-    if(confirm("Are you sure you want to logout?")) {
-        console.log("Logging out...");
-        // window.location.href = "login.html";
-    }
+    // Hide the profile dropdown first (optional, for cleaner UI)
+    const menu = document.getElementById("db-profile-menu");
+    if (menu) menu.classList.remove("show");
+
+    // Show the custom modal
+    const modal = document.getElementById("logout-confirm-modal");
+    modal.classList.add("show");
 }
+
+// --- 2. Close Modal (Cancel Action) ---
+function closeLogoutModal() {
+    const modal = document.getElementById("logout-confirm-modal");
+    modal.classList.remove("show");
+}
+
+// --- 3. Perform Actual Logout (Yes Action) ---
+function performLogout() {
+    const btn = document.querySelector(".btn-confirm");
+    
+    // UI Feedback (Loading state)
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Logging out...';
+    btn.style.opacity = "0.8";
+
+    // Simulate short delay for smooth UX
+    setTimeout(() => {
+        // 1. Clear Data
+        localStorage.clear(); 
+        sessionStorage.clear();
+
+        // 2. Redirect to Login
+        window.location.href = "../employee_login/emp_login.html"; // Adjust path as needed
+    }, 800);
+}
+
+// Close modal if clicking outside the card
+window.addEventListener("click", function(e) {
+    const modal = document.getElementById("logout-confirm-modal");
+    if (e.target === modal) {
+        closeLogoutModal();
+    }
+});
 
 
 
