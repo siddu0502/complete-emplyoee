@@ -2,12 +2,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const emp_id = localStorage.getItem('employee_id');
 
     // 1. CONFIGURATION & STATE
-    fetch(`http://127.0.0.1:8000/api/employee/dashboard/${emp_id}/`)
+    fetch(`http://13.51.167.95:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
-            if (document.getElementById("name")) document.getElementById("name").innerText = data.name;
-            if (document.getElementById("role")) document.getElementById("role").innerText = data.role;
-        });
+            // querySelectorAll updates BOTH the sidebar AND the top-right dropdown menu
+            document.querySelectorAll("#pname").forEach(el => {
+                el.innerText = data.name || "Employee";
+            });
+            document.querySelectorAll("#role").forEach(el => {
+                el.innerText = data.role || "Employee";
+            });
+            document.querySelectorAll("#employee_id").forEach(el => {
+                el.innerText = data.employee_id || emp_id;
+            });
+        }).catch(err => console.error("Profile Fetch Error:", err));
 
     const SHIFT_START_HR = 10; // 10:00 AM
     const SHIFT_END_HR = 19;   // 07:00 PM
@@ -356,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
             breakStartTime = Date.now();
             currentBreakType = bmEls.breakSelect.value.toLowerCase().trim();
 
-            fetch("http://127.0.0.1:8000/api/employee-break/start/", {
+            fetch("http://13.51.167.95:8000/api/employee-break/start/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id: emp_id, break_type: currentBreakType })
@@ -391,7 +399,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             if (!isOnBreak) return; // Prevent execution if not actually on a break
             
-            fetch("http://127.0.0.1:8000/api/employee-break/end/", {
+            fetch("http://13.51.167.95:8000/api/employee-break/end/", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id: emp_id, break_type: currentBreakType })
@@ -443,7 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const nowStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
             if (!isWorking && !isOnBreak && totalWorkMs === 0) {
-                fetch("http://127.0.0.1:8000/api/employee-attendence/create/", {
+                fetch("http://13.51.167.95:8000/api/employee-attendence/create/", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id: emp_id })
@@ -459,7 +467,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 addMainLog("Punch In", "Shift Started");
             }
             else if (isWorking) {
-                fetch("http://127.0.0.1:8000/api/employee-attendence/checkout/", {
+                fetch("http://13.51.167.95:8000/api/employee-attendence/checkout/", {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id: emp_id })
@@ -492,7 +500,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateBreakCircleUI(0); 
         loadHistoryTable(); 
 
-        fetch(`http://127.0.0.1:8000/api/attendence-status/${emp_id}/`)
+        fetch(`http://13.51.167.95:8000/api/attendence-status/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
             if (data.status === "punched_in") {
@@ -698,9 +706,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const res = await fetch(`http://127.0.0.1:8000/api/employee-attendence-history/${emp_id}/`);
+            const res = await fetch(`http://13.51.167.95:8000/api/employee-attendence-history/${emp_id}/`);
             const data = await res.json();
-            const reqRes = await fetch(`http://127.0.0.1:8000/api/admin/attendance-requests/`);
+            const reqRes = await fetch(`http://13.51.167.95:8000/api/admin/attendance-requests/`);
             const allRequests = await reqRes.json();
             
             baselineWeeklyMs = 0;
@@ -839,7 +847,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 reason: reasonInput.value
             };
 
-            fetch(`http://127.0.0.1:8000/api/attendance-request/create/`, {
+            fetch(`http://13.51.167.95:8000/api/attendance-request/create/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(updatePayload)

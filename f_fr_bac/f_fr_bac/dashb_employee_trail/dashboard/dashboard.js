@@ -1,357 +1,292 @@
-
 document.addEventListener("DOMContentLoaded", function () {
-     const emp_id = localStorage.getItem('employee_id')
-   
-    console.log(emp_id)
-fetch(`http://13.60.70.185:8000/api/employee/dashboard/${emp_id}/`)
+    const emp_id = localStorage.getItem('employee_id');
+
+    // 1. GLOBAL AUTH CHECK
+    // Redirect to login if employee_id is missing (Not logged in)
+    if (!emp_id) {
+        window.location.href = '../employee_login/emp_login.html';
+        return;
+    }
+
+    console.log("Logged in Employee ID:", emp_id);
+
+    // ==========================================
+    // 2. FETCH REAL USER DATA FROM BACKEND
+    // ==========================================
+    fetch(`http://13.51.167.95:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
-            console.log(data)
-            document.getElementById("name").innerText = data.name;
-             document.getElementById("role").innerText = data.role;
-              document.getElementById("display_name").innerText = data.name;
-              document.getElementById("email").innerText = data.email;
-              
-                document.getElementById("display_dob").innerText = data.other_details[0].dob;
-                 document.getElementById("display_marital").innerText = data.other_details[0].marital_status;
-                document.getElementById("display_number").innerText = data.other_details[0].mobile;
-                document.getElementById("display_role").innerText = data.role;
-                document.getElementById("display_salary").innerText = data.salary;
-                document.getElementById("display_address").innerText = data.other_details[0].address;
-                document.getElementById("display_city").innerText = data.other_details[0].city;
+            console.log("Employee Data:", data);
 
-               if(data.bank_details && data.bank_details.length > 0){
-                document.getElementById("bankname").innerText = data.bank_details[0].bank_name;
-                document.getElementById("accno").innerText = data.bank_details[0].acc_no;
-                document.getElementById("ifsccode").innerText = data.bank_details[0].ifsc_code;
-                document.getElementById("accholdername").innerText = data.bank_details[0].holder_name;
-                document.getElementById("number").innerText = data.bank_details[0].mobile;
-                document.getElementById("branch").innerText = data.bank_details[0].branch
-                
+            // A. UPDATE HEADER & SIDEBAR (Exists on all pages)
+            if (document.getElementById("name")) document.getElementById("name").innerText = data.name;
+            if (document.getElementById("role")) document.getElementById("role").innerText = data.role;
 
-                }
-                
-                document.getElementById("display_other_phone").innerText = data.other_details[0].mobile
-                document.getElementById("display_other_gender").innerText = data.other_details[0].Gender
-                document.getElementById("display_other_dob").innerText = data.other_details[0].dob
-                
-                
-        // document.getElementById("mobile").innerText = data.other_details[0].mobile
-        // document.getElementById("gender").innerText = data.other_details[0].Gender
-        // document.getElementById("city").innerText = data.other_details[0].city
-        // document.getElementById("dob").innerText = data.other_details[0].dob
+            // B. UPDATE DASHBOARD MAIN PROFILE (Only updates if elements exist)
+            if (document.getElementById("display_name")) document.getElementById("display_name").innerText = data.name;
+            if (document.getElementById("email")) document.getElementById("email").innerText = data.email;
+            if (document.getElementById("display_role")) document.getElementById("display_role").innerText = data.role;
+            if (document.getElementById("display_salary")) document.getElementById("display_salary").innerText = data.salary;
 
-    
-              
+            // C. UPDATE DASHBOARD OTHER DETAILS (Only updates if elements exist)
+            if (data.other_details && data.other_details.length > 0) {
+                const od = data.other_details[0];
+                if (document.getElementById("display_dob")) document.getElementById("display_dob").innerText = od.dob;
+                if (document.getElementById("display_marital")) document.getElementById("display_marital").innerText = od.marital_status;
+                if (document.getElementById("display_number")) document.getElementById("display_number").innerText = od.mobile;
+                if (document.getElementById("display_address")) document.getElementById("display_address").innerText = od.address;
+                if (document.getElementById("display_city")) document.getElementById("display_city").innerText = od.city;
+                if (document.getElementById("display_other_phone")) document.getElementById("display_other_phone").innerText = od.mobile;
+                if (document.getElementById("display_other_gender")) document.getElementById("display_other_gender").innerText = od.Gender;
+                if (document.getElementById("display_other_dob")) document.getElementById("display_other_dob").innerText = od.dob;
+            }
 
+            // D. UPDATE DASHBOARD BANK DETAILS (Only updates if elements exist)
+            if (data.bank_details && data.bank_details.length > 0) {
+                const bd = data.bank_details[0];
+                if (document.getElementById("bankname")) document.getElementById("bankname").innerText = bd.bank_name;
+                if (document.getElementById("accno")) document.getElementById("accno").innerText = bd.acc_no;
+                if (document.getElementById("ifsccode")) document.getElementById("ifsccode").innerText = bd.ifsc_code;
+                if (document.getElementById("accholdername")) document.getElementById("accholdername").innerText = bd.holder_name;
+                if (document.getElementById("number")) document.getElementById("number").innerText = bd.mobile;
+                if (document.getElementById("branch")) document.getElementById("branch").innerText = bd.branch;
+            }
 
-
-            // document.getElementById("doj").innerText = data.joining;
-
-           
-            // document.getElementById("p_name").innerText = data.name;
-            // document.getElementById("email").innerText = data.email;
-
+            // E. PASS DATA TO HEADER AVATAR DROPDOWN (Exists on all pages)
+            let fName = data.name || "Employee";
+            let lName = "";
+            if(data.name && data.name.includes(" ")) {
+                let parts = data.name.split(" ");
+                fName = parts[0];
+                lName = parts.slice(1).join(" ");
+            }
             
-            // document.getElementById("username").innerText = data.username;
+            loadUserProfile({
+                firstName: fName,
+                lastName: lName,
+                empId: data.employee_id || emp_id,
+                profilePic: "" // Provide actual image URL here if backend sends one
+            });
 
-            // document.getElementById("role").innerText = data.role;
-            // document.getElementById("salary").innerText = data.salary;
+        })
+        .catch(err => console.error("Failed to load employee data:", err));
 
-            
-
-            })
-   
-    // 1. GLOBAL TOAST NOTIFICATION LOGIC
-     
+    // ==========================================
+    // 3. GLOBAL TOAST NOTIFICATION LOGIC
+    // ==========================================
     const toast = document.getElementById("successToast");
     const toastCloseBtn = document.querySelector(".toast-close");
 
-    // Function to show the success message
     function showToast() {
         if (toast) {
             toast.classList.add("show");
-            
-            // Auto-hide after 3 seconds
             setTimeout(() => {
                 toast.classList.remove("show");
             }, 3000);
         }
     }
 
-    // Manual close button for toast
     if (toastCloseBtn) {
         toastCloseBtn.addEventListener("click", () => {
             toast.classList.remove("show");
         });
     }
 
-    
-    // 2. PROFILE DETAILS CARD LOGIC
-    
-    
-    // Modal & Buttons
+    // ==========================================
+    // 4. PROFILE DETAILS CARD LOGIC (Dashboard Only)
+    // ==========================================
     const profileModal = document.getElementById("editProfileModal");
     const profileOpenBtn = document.getElementById("openEditModalBtn");
     const profileCloseBtn = document.getElementById("closeEditModal");
     const profileCancelBtn = document.getElementById("cancelEditBtn");
     const profileForm = document.getElementById("editProfileForm");
 
-    // Display Fields (Read data from here)
-    const dispName = document.getElementById("display_name");
-    // const dispUser = document.getElementById("display_username");
     const dispNumber = document.getElementById("display_number");
     const dispDob = document.getElementById("display_dob");
-    // const dispDesignation = document.getElementById("display_designation");
-    // const dispSalary = document.getElementById("display_salary");
     const dispAddress = document.getElementById("display_address");
     const dispCity = document.getElementById("display_city");
 
-    // Input Fields (Write data to here)
-   
-    // const inputUser = document.getElementById("input_username");
     const inputNumber = document.getElementById("input_number");
     const inputDob = document.getElementById("input_dob");
-    // const inputDesignation = document.getElementById("input_designation");
-    // const inputSalary = document.getElementById("input_salary");
     const inputAddress = document.getElementById("input_address");
     const inputCity = document.getElementById("input_city");
 
-    // OPEN Profile Modal
     if (profileOpenBtn) {
         profileOpenBtn.addEventListener("click", () => {
-            // Fill inputs with current values
-            // if(inputName) inputName.value = dispName.innerText;
-            // if(inputUser) inputUser.value = dispUser.innerText;
-            if(inputNumber) inputNumber.value = dispNumber.innerText;
-            if(inputDob) inputDob.value = dispDob.innerText;
-            // if(inputDesignation) inputDesignation.value = dispDesignation.innerText;
-            // if(inputSalary) inputSalary.value = dispSalary.innerText;
-            if(inputAddress) inputAddress.value = dispAddress.innerText;
-            if(inputCity) inputCity.value = dispCity.innerText;
-
-            profileModal.classList.add("active");
+            if (inputNumber && dispNumber) inputNumber.value = dispNumber.innerText;
+            if (inputDob && dispDob) inputDob.value = dispDob.innerText;
+            if (inputAddress && dispAddress) inputAddress.value = dispAddress.innerText;
+            if (inputCity && dispCity) inputCity.value = dispCity.innerText;
+            if (profileModal) profileModal.classList.add("active");
         });
     }
 
-    // CLOSE Profile Modal
     const closeProfileModalFunc = () => {
-        if(profileModal) profileModal.classList.remove("active");
+        if (profileModal) profileModal.classList.remove("active");
     };
 
     if (profileCloseBtn) profileCloseBtn.addEventListener("click", closeProfileModalFunc);
     if (profileCancelBtn) profileCancelBtn.addEventListener("click", closeProfileModalFunc);
 
-    // SAVE Profile Details
     if (profileForm) {
         profileForm.addEventListener("submit", (e) => {
             e.preventDefault();
 
-            // // Update Page Text
-            // if(dispName) dispName.innerText = inputName.value;
-            // // if(dispUser) dispUser.innerText = inputUser.value;
-            // if(dispNumber) dispNumber.innerText = inputNumber.value;
-            // if(dispDob) dispDob.innerText = inputDob.value;
-            // // if(dispDesignation) dispDesignation.innerText = inputDesignation.value;
-            // // if(dispSalary) dispSalary.innerText = inputSalary.value;
-            // if(dispAddress) dispAddress.innerText = inputAddress.value;
-            // if(dispCity) dispCity.innerText = inputCity.value;
             const profileData = {
-        mobile: document.getElementById('input_number').value,
-        dob: document.getElementById('input_dob').value,
-        marital_status : document.getElementById('input_other_marital').value,
-        address: document.getElementById('input_address').value,
-        city: document.getElementById('input_city').value
-    };
+                mobile: document.getElementById('input_number') ? document.getElementById('input_number').value : "",
+                dob: document.getElementById('input_dob') ? document.getElementById('input_dob').value : "",
+                marital_status: document.getElementById('input_other_marital') ? document.getElementById('input_other_marital').value : "",
+                address: document.getElementById('input_address') ? document.getElementById('input_address').value : "",
+                city: document.getElementById('input_city') ? document.getElementById('input_city').value : ""
+            };
 
-    fetch(`http://13.60.70.185:8000/api/update-employee/${emp_id}/`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profileData)
-    })
-    .then(res => res.json())
-    .then(data => {
-        console.log("Profile update response:", data);
-        if (data.profile) alert("Profile updated successfully!");
-        else if (data.profile_errors) alert(JSON.stringify(data.profile_errors));
-    })
-    .catch(err => {
-        console.error("Profile update error:", err);
-        alert("Failed to update profile.");
-    });
-
-            closeProfileModalFunc();
-            showToast();
+            fetch(`http://13.51.167.95:8000/api/update-employee/${emp_id}/`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(profileData)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.message || data.profile) {
+                        alert("Profile updated successfully!");
+                        closeProfileModalFunc();
+                        showToast();
+                        window.location.reload(); 
+                    } else {
+                        alert("Update failed, check console.");
+                        console.error(data);
+                    }
+                })
+                .catch(err => {
+                    console.error("Profile update error:", err);
+                    alert("Failed to update profile.");
+                });
         });
     }
 
-    
-    // 3. OTHER INFORMATION CARD LOGIC
-   
-
-    // Modal & Buttons
+    // ==========================================
+    // 5. OTHER INFORMATION CARD LOGIC (Dashboard Only)
+    // ==========================================
     const otherModal = document.getElementById("editOtherModal");
     const otherOpenBtn = document.getElementById("openOtherEditBtn");
     const otherCloseBtn = document.getElementById("closeOtherModal");
     const otherCancelBtn = document.getElementById("cancelOtherBtn");
     const otherForm = document.getElementById("editOtherForm");
 
-    // Display Fields
     const dispOtherPhone = document.getElementById("display_other_phone");
     const dispOtherGender = document.getElementById("display_other_gender");
     const dispOtherDob = document.getElementById("display_other_dob");
 
-    // Input Fields
     const inputOtherPhone = document.getElementById("input_other_phone");
-    const inputOtherGender = document.getElementById("input_other_gender"); // Select Box
+    const inputOtherGender = document.getElementById("input_other_gender"); 
     const inputOtherDob = document.getElementById("input_other_dob");
 
-    // OPEN Other Modal
     if (otherOpenBtn) {
         otherOpenBtn.addEventListener("click", () => {
-            // Fill inputs
-            if(inputOtherPhone) inputOtherPhone.value = dispOtherPhone.innerText;
-            if(inputOtherGender) inputOtherGender.value = dispOtherGender.innerText; // Matches option value
-            if(inputOtherDob) inputOtherDob.value = dispOtherDob.innerText;
-
-            otherModal.classList.add("active");
+            if (inputOtherPhone && dispOtherPhone) inputOtherPhone.value = dispOtherPhone.innerText;
+            if (inputOtherGender && dispOtherGender) inputOtherGender.value = dispOtherGender.innerText; 
+            if (inputOtherDob && dispOtherDob) inputOtherDob.value = dispOtherDob.innerText;
+            if (otherModal) otherModal.classList.add("active");
         });
     }
 
-    // CLOSE Other Modal
     const closeOtherModalFunc = () => {
-        if(otherModal) otherModal.classList.remove("active");
+        if (otherModal) otherModal.classList.remove("active");
     };
 
     if (otherCloseBtn) otherCloseBtn.addEventListener("click", closeOtherModalFunc);
     if (otherCancelBtn) otherCancelBtn.addEventListener("click", closeOtherModalFunc);
 
-    // SAVE Other Details
     if (otherForm) {
         otherForm.addEventListener("submit", (e) => {
             e.preventDefault();
             const profileData = {
-                mobile: document.getElementById('input_other_phone').value,
-                gender: document.getElementById('input_other_gender').value,
-                dob: document.getElementById('input_other_dob').value,
-            }
-             fetch(`http://13.60.70.185:8000/api/update-employee/${emp_id}/`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profileData)
-    })
-    .then(res => res.json())
-    .then(data => {
-        console.log("Profile update response:", data);
-        if (data.profile) alert("Profile updated successfully!");
-        else if (data.profile_errors) alert(JSON.stringify(data.profile_errors));
-    })
-    .catch(err => {
-        console.error("Profile update error:", err);
-        alert("Failed to update profile.");
-    });
+                mobile: document.getElementById('input_other_phone') ? document.getElementById('input_other_phone').value : "",
+                Gender: document.getElementById('input_other_gender') ? document.getElementById('input_other_gender').value : "",
+                dob: document.getElementById('input_other_dob') ? document.getElementById('input_other_dob').value : "",
+            };
 
-
-            // // Update Page Text
-            // if(dispOtherPhone) dispOtherPhone.innerText = inputOtherPhone.value;
-            // if(dispOtherGender) dispOtherGender.innerText = inputOtherGender.value;
-            // if(dispOtherDob) dispOtherDob.innerText = inputOtherDob.value;
-
-            closeOtherModalFunc();
-            showToast();
+            fetch(`http://13.51.167.95:8000/api/update-employee/${emp_id}/`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(profileData)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    alert("Other Information updated successfully!");
+                    closeOtherModalFunc();
+                    showToast();
+                    window.location.reload();
+                })
+                .catch(err => {
+                    console.error("Profile update error:", err);
+                    alert("Failed to update profile.");
+                });
         });
     }
 
-    
-    // 4. GLOBAL CLICK OUTSIDE TO CLOSE
-    
+    // Close Modals on Outside Click
     window.addEventListener("click", (e) => {
-        if (e.target === profileModal) closeProfileModalFunc();
-        if (e.target === otherModal) closeOtherModalFunc();
+        if (profileModal && e.target === profileModal) closeProfileModalFunc();
+        if (otherModal && e.target === otherModal) closeOtherModalFunc();
     });
-
 });
 
-
-
-//profile details card logic
+// ==========================================
+// 6. PROFILE PHOTO MODAL LOGIC
+// ==========================================
 document.addEventListener("DOMContentLoaded", function () {
-    
-    // ==========================================
-    // PROFILE PHOTO MODAL LOGIC
-    // ==========================================
-
-    // Elements
     const photoModal = document.getElementById("photoModal");
     const openPhotoBtn = document.getElementById("openPhotoModalBtn");
     const closePhotoBtn = document.getElementById("closePhotoModal");
     const cancelPhotoBtn = document.getElementById("cancelPhotoBtn");
     const savePhotoBtn = document.getElementById("savePhotoBtn");
 
-    // Image Elements
-    const mainImg = document.getElementById("mainProfileImage"); // The one on the page
-    const previewImg = document.getElementById("modalImagePreview"); // The one in the popup
+    const mainImg = document.getElementById("mainProfileImage"); 
+    const previewImg = document.getElementById("modalImagePreview"); 
     const fileInput = document.getElementById("newPhotoInput");
     const fileNameDisplay = document.getElementById("fileNameDisplay");
-    
-    // Toast (Reuse existing toast)
     const toast = document.getElementById("successToast");
 
-    // 1. OPEN MODAL
     if (openPhotoBtn) {
         openPhotoBtn.addEventListener("click", () => {
-            // Reset preview to match current main image
-            previewImg.src = mainImg.src;
-            fileNameDisplay.textContent = "No file chosen";
-            fileInput.value = ""; // Clear input
-            
-            photoModal.classList.add("active");
+            if (previewImg && mainImg) previewImg.src = mainImg.src;
+            if (fileNameDisplay) fileNameDisplay.textContent = "No file chosen";
+            if (fileInput) fileInput.value = "";
+            if (photoModal) photoModal.classList.add("active");
         });
     }
 
-    // 2. CLOSE MODAL FUNCTION
     const closePhotoModalFunc = () => {
-        photoModal.classList.remove("active");
+        if (photoModal) photoModal.classList.remove("active");
     };
 
     if (closePhotoBtn) closePhotoBtn.addEventListener("click", closePhotoModalFunc);
     if (cancelPhotoBtn) cancelPhotoBtn.addEventListener("click", closePhotoModalFunc);
-    
-    // Close on outside click
+
     window.addEventListener("click", (e) => {
-        if (e.target === photoModal) closePhotoModalFunc();
+        if (photoModal && e.target === photoModal) closePhotoModalFunc();
     });
 
-    // 3. PREVIEW IMAGE ON FILE SELECT
     if (fileInput) {
-        fileInput.addEventListener("change", function(e) {
+        fileInput.addEventListener("change", function (e) {
             const file = e.target.files[0];
-            
             if (file) {
-                // Update file name text
-                fileNameDisplay.textContent = file.name;
-
-                // Create preview
+                if (fileNameDisplay) fileNameDisplay.textContent = file.name;
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImg.src = e.target.result;
+                reader.onload = function (e) {
+                    if (previewImg) previewImg.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             }
         });
     }
 
-    // 4. SAVE BUTTON CLICK
     if (savePhotoBtn) {
         savePhotoBtn.addEventListener("click", () => {
-            // Update the main profile image on the page
-            mainImg.src = previewImg.src;
-
-            // Close Modal
+            if (mainImg && previewImg) mainImg.src = previewImg.src;
             closePhotoModalFunc();
-
-            // Show Success Toast
-            if(toast) {
+            if (toast) {
                 toast.classList.add("show");
                 setTimeout(() => toast.classList.remove("show"), 3000);
             }
@@ -359,177 +294,69 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
-// const profile_update = document.getElementById('editProfileForm')
-// profile_update.addEventListener('submit',function (event) {
-//      event.preventDefault();
-//     const profileData = {
-//       
-//         mobile: document.getElementById('input_number').value,
-//         dob: document.getElementById('input_dob').value,
-//         address: document.getElementById('input_address').value,
-//         city: document.getElementById('input_city').value
-//     };
-
-//     fetch(`http://13.60.70.185:8000/api/update-employee/${emp_id}/`, {
-//         method: "PATCH",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify(profileData)
-//     })
-//     .then(res => res.json())
-//     .then(data => {
-//         console.log("Profile update response:", data);
-//         if (data.profile) alert("Profile updated successfully!");
-//         else if (data.profile_errors) alert(JSON.stringify(data.profile_errors));
-//     })
-//     .catch(err => {
-//         console.error("Profile update error:", err);
-//         alert("Failed to update profile.");
-//     });
-
-// })
-//notification and profile toggle logic
-/* --- TOGGLE NOTIFICATIONS --- */
-function db_toggleNotifications() {
-    const notifDropdown = document.getElementById('db-notification-menu');
-    const notifBtn = document.querySelector('.db-notif-trigger-btn');
-    
-    // Close profile if it's currently open
-    db_closeProfile();
-
-    // Toggle visibility class
-    notifDropdown.classList.toggle('db-show-menu');
-    notifBtn.classList.toggle('db-active-state');
-}
-
-/* --- TOGGLE PROFILE --- */
-function db_toggleProfile() {
-    const profileDropdown = document.getElementById('db-profile-menu');
-    const profileBtn = document.querySelector('.db-profile-trigger-btn');
-
-    // Close notifications if currently open
-    db_closeNotifications();
-
-    // Toggle visibility class
-    profileDropdown.classList.toggle('db-show-menu');
-    profileBtn.classList.toggle('db-active-state');
-}
-
-/* --- HELPER FUNCTIONS --- */
-function db_closeNotifications() {
-    document.getElementById('db-notification-menu').classList.remove('db-show-menu');
-    document.querySelector('.db-notif-trigger-btn').classList.remove('db-active-state');
-}
-
-function db_closeProfile() {
-    document.getElementById('db-profile-menu').classList.remove('db-show-menu');
-    document.querySelector('.db-profile-trigger-btn').classList.remove('db-active-state');
-}
-
-/* --- LOGOUT LOGIC --- */
-function db_logoutUser() {
-    // 1. Clear session/local storage
-    // localStorage.removeItem('userToken');
-    
-    // 2. Redirect
-    window.location.href = '../employee_login/emp_login.html'; 
-}
-
-/* --- CLOSE MENUS WHEN CLICKING OUTSIDE --- */
-window.onclick = function(event) {
-    // Check if the click is NOT inside a widget wrapper
-    if (!event.target.closest('.db-widget-wrapper')) {
-        db_closeNotifications();
-        db_closeProfile();
-    }
-}
-
-
-//small profile 
-document.addEventListener("DOMContentLoaded", () => {
-    // --- 1. SIMULATED USER DATA ---
-    // Change 'profilePic' to a URL string to test the image version.
-    // Leave as null or empty string "" to test the initials version.
-    const currentUser = {
-        firstName: "Dhamodhar",
-        lastName: "Kamini",
-        empId: "EMP-2024-055",
-        profilePic: "" // Try changing this to: "https://ui-avatars.com/api/?name=John+Doe"
-    };
-
-    // --- 2. INITIALIZE PROFILE ---
-    loadUserProfile(currentUser);
-});
-
-/**
- * Populates the profile section with data.
- * Handles Image vs Initials logic.
- */
+// ==========================================
+// 7. AVATAR & INITIALS LOGIC (Universal)
+// ==========================================
 function loadUserProfile(user) {
-    // 1. Set Text Data
-    document.getElementById("db-user-name").textContent = `${user.firstName} ${user.lastName}`;
-    document.getElementById("db-employee-id").textContent = user.empId;
+    const nameEl = document.getElementById("db-user-name");
+    const empIdEl = document.getElementById("db-employee-id");
 
-    // 2. Handle Avatar Logic (For both Trigger and Header)
+    if (nameEl) nameEl.textContent = `${user.firstName} ${user.lastName}`;
+    if (empIdEl) empIdEl.textContent = user.empId;
+
     updateAvatar("db-trigger-avatar-box", "db-trigger-img", user);
     updateAvatar("db-header-avatar-box", "db-header-img", user);
 }
 
-/**
- * Helper function to render image or initials into a specific container
- */
 function updateAvatar(containerId, imgId, user) {
     const container = document.getElementById(containerId);
     const imgElement = document.getElementById(imgId);
 
+    if (!container) return; // Failsafe if element isn't on the page
+
     if (user.profilePic && user.profilePic.trim() !== "") {
-        // CASE A: User has a photo
-        imgElement.src = user.profilePic;
-        imgElement.style.display = "block";
-        
-        // Remove any existing initials div if it exists
+        if (imgElement) {
+            imgElement.src = user.profilePic;
+            imgElement.style.display = "block";
+        }
         const existingInitials = container.querySelector('.avatar-initials');
         if (existingInitials) existingInitials.remove();
-
     } else {
-        // CASE B: No photo -> Generate Initials
-        imgElement.style.display = "none"; // Hide the broken/empty image tag
+        if (imgElement) imgElement.style.display = "none";
 
-        // Get Initials (First char of First Name + First char of Last Name)
         const fInitial = user.firstName ? user.firstName.charAt(0) : "";
         const lInitial = user.lastName ? user.lastName.charAt(0) : "";
         const initials = (fInitial + lInitial).toUpperCase();
 
-        // Check if initials element already exists to avoid duplicates
         let initialsDiv = container.querySelector('.avatar-initials');
-        
         if (!initialsDiv) {
             initialsDiv = document.createElement("div");
             initialsDiv.className = "avatar-initials";
             container.appendChild(initialsDiv);
         }
-        
         initialsDiv.textContent = initials;
     }
 }
 
-// --- 3. TOGGLE DROPDOWN FUNCTION ---
-function db_toggleProfile() {
-    const menu = document.getElementById("db-profile-menu");
-    menu.classList.toggle("show");
+// ==========================================
+// 8. NOTIFICATIONS, PROFILE MENU & LOGOUT
+// ==========================================
+function db_toggleNotifications() {
+    const notifDropdown = document.getElementById('db-notification-menu');
+    const notifBtn = document.querySelector('.db-notif-trigger-btn');
+    if (!notifDropdown || !notifBtn) return;
+
+    db_closeProfile();
+    notifDropdown.classList.toggle('db-show-menu');
+    notifBtn.classList.toggle('db-active-state');
 }
 
-// Close dropdown if clicking outside
-window.addEventListener("click", function(e) {
-    const menu = document.getElementById("db-profile-menu");
-    const trigger = document.querySelector(".db-profile-trigger-btn");
-    
-    if (menu.classList.contains("show")) {
-        if (!menu.contains(e.target) && !trigger.contains(e.target)) {
-            menu.classList.remove("show");
-        }
-    }
-});
+function db_toggleProfile() {
+    const profileDropdown = document.getElementById('db-profile-menu');
+    const profileBtn = document.querySelector('.db-profile-trigger-btn');
+    if (!profileDropdown || !profileBtn) return;
 
+<<<<<<< Updated upstream
 // --- 4. LOGOUT FUNCTION ---
 // --- 1. Trigger the Modal (Replaces the old confirm alert) ---
 function db_logoutUser() {
@@ -572,6 +399,42 @@ window.addEventListener("click", function(e) {
     const modal = document.getElementById("logout-confirm-modal");
     if (e.target === modal) {
         closeLogoutModal();
+=======
+    db_closeNotifications();
+    profileDropdown.classList.toggle('db-show-menu');
+    profileBtn.classList.toggle('db-active-state');
+}
+
+function db_closeNotifications() {
+    const menu = document.getElementById('db-notification-menu');
+    const btn = document.querySelector('.db-notif-trigger-btn');
+    if (menu) menu.classList.remove('db-show-menu');
+    if (btn) btn.classList.remove('db-active-state');
+}
+
+function db_closeProfile() {
+    const menu = document.getElementById('db-profile-menu');
+    const btn = document.querySelector('.db-profile-trigger-btn');
+    if (menu) menu.classList.remove('db-show-menu');
+    if (btn) btn.classList.remove('db-active-state');
+}
+
+// Global click to close dropdowns safely
+window.onclick = function (event) {
+    if (!event.target.closest('.db-widget-wrapper')) {
+        db_closeNotifications();
+        db_closeProfile();
+    }
+};
+
+// --- GLOBAL LOGOUT LOGIC ---
+function db_logoutUser() {
+    if (confirm("Are you sure you want to logout?")) {
+        // Clear session safely
+        localStorage.removeItem('employee_id');
+        // Redirect
+        window.location.href = '../employee_login/emp_login.html'; 
+>>>>>>> Stashed changes
     }
 });
 

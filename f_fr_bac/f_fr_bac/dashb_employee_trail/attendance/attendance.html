@@ -168,7 +168,9 @@
                         <div class="db-widget-wrapper">
                             <!-- Profile Image Button -->
                             <button class="db-profile-trigger-btn" onclick="db_toggleProfile()">
-                                <img src="../assets/profiledp.jpeg" alt="User">
+                                 <div id="db-trigger-avatar-box" class="db-avatar-box sm">
+                                    <img src="" alt="User" id="db-trigger-img" style="display: none;">
+                                 </div>
                                 <span class="db-online-dot"></span>
                             </button>
 
@@ -176,15 +178,15 @@
                             <div class="db-dropdown-card db-profile-card" id="db-profile-menu">
                                 <!-- User Info Header -->
                                 <div class="db-profile-header-info">
-                                    <div class="db-user-avatar-lg">
-                                        <img src="../assets/profiledp.jpeg" alt="User">
+                                   <div id="db-header-avatar-box" class="db-user-avatar-lg">
+                                        <img src="" alt="User" id="db-header-img" style="display: none;">
                                     </div>
                                     <div class="db-user-info-text">
-                                        <h3 id="name"></h3>
+                                        <h3 id="pname"></h3>
                                         <p>Employee ID: <span id="employee_id"></span></p>
                                     </div>
                                 </div>
-
+                                
                                 <!-- Menu Links -->
                                 <ul class="db-profile-nav-list">
                                     <li><a href="../dashboard/dashboard.html"><i class="fa-regular fa-user"></i> My

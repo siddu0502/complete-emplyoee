@@ -158,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const empId = localStorage.getItem('employee_id');
     
-    fetch(`http://13.60.70.185:8000/api/employee/dashboard/${empId}/`)
+    fetch(`http://13.51.167.95:8000/api/employee/dashboard/${empId}/`)
         .then(res => res.json())
         .then(data => {
             document.getElementById("name").innerText = data.name;
@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    fetch(`http://13.60.70.185:8000/api/employee-payslips/${empId}/`)
+    fetch(`http://13.51.167.95:8000/api/employee-payslips/${empId}/`)
         .then(res => res.json())
         .then(data => {
             payslipTableBody.innerHTML = "";
@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const row = document.createElement("tr");
                 row.innerHTML = `
                     <td>${p.month}</td>
-                    <td>${p.name.email}</td>
+                    <td>Associate Software Engineer</td>
                     <td>₹${p.gross_salary}</td>
                     <td>₹${p.net_salary}</td>
                 `;
