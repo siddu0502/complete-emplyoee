@@ -406,7 +406,7 @@ const botKnowledge = [
     },
     {
         keywords: ["time", "timing", "hour", "clock", "shift", "schedule", "open", "close"],
-        response: "General office hours are <strong>10:00 AM to 7:00 PM</strong>, Monday to Friday."
+        response: "General office hours are <strong>10:00 AM to 7:00 PM</strong>, Monday to Saturday."
     },
     {
         keywords: ["leave", "sick", "casual", "vacation", "holiday", "off"],
