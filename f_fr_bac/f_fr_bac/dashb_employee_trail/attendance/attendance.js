@@ -1,21 +1,33 @@
-
-
-
 document.addEventListener("DOMContentLoaded", () => {
-const emp_id = localStorage.getItem('employee_id')   
+    const emp_id = localStorage.getItem('employee_id');
+
     // 1. CONFIGURATION & STATE
-    
-    fetch(`http://13.60.26.193:8000/api/employee/dashboard/${emp_id}/`)
+    fetch(`http://13.51.167.95:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
-            console.log(data)
-            document.getElementById("name").innerText = data.name;
-             document.getElementById("role").innerText = data.role;})
+            // querySelectorAll updates BOTH the sidebar AND the top-right dropdown menu
+            document.querySelectorAll("#pname").forEach(el => {
+                el.innerText = data.name || "Employee";
+            });
+            document.querySelectorAll("#role").forEach(el => {
+                el.innerText = data.role || "Employee";
+            });
+            document.querySelectorAll("#employee_id").forEach(el => {
+                el.innerText = data.employee_id || emp_id;
+            });
+        }).catch(err => console.error("Profile Fetch Error:", err));
+
     const SHIFT_START_HR = 10; // 10:00 AM
     const SHIFT_END_HR = 19;   // 07:00 PM
     const TOTAL_HOURS = SHIFT_END_HR - SHIFT_START_HR; // 9 hours
-
+    
+    // PERSISTENCE KEYS
+    const todayStr = new Date().toLocaleDateString('en-CA');
     const STORAGE_KEY_HISTORY = "att_history_log";
+    const TIMELINE_KEY = `timeline_${emp_id}_${todayStr}`;
+    const DAILY_LOGS_KEY = `daily_logs_${emp_id}_${todayStr}`;
+    const BREAK_LOGS_KEY = `break_logs_${emp_id}_${todayStr}`;
+    const USAGE_KEY = `break_usage_${emp_id}_${todayStr}`;
 
     // State Variables
     let workTimerInterval = null;
@@ -25,33 +37,56 @@ const emp_id = localStorage.getItem('employee_id')
     let breakStartTime = null;
     let punchInTimeStr = null;
     let totalWorkMs = 0;
-    let totalBreakMs = 0;
+    
+    let baselineWeeklyMs = 0;
+    let baselineMonthlyMs = 0;
+
+    // Load Persisted Data
+    const LIMITS = { lunch: 45 * 60, normal: 15 * 60 };
+    let usage = JSON.parse(localStorage.getItem(USAGE_KEY));
+    if (!usage || typeof usage !== 'object') usage = { lunch: 0, normal: 0 };
+    usage.lunch = parseInt(usage.lunch) || 0;
+    usage.normal = parseInt(usage.normal) || 0;
+    
+    let totalBreakMs = (usage.lunch + usage.normal) * 1000;
+    
+    let timelineSessions = JSON.parse(localStorage.getItem(TIMELINE_KEY)) || [];
+    let dailyLogs = JSON.parse(localStorage.getItem(DAILY_LOGS_KEY)) || [];
+    let breakLogs = JSON.parse(localStorage.getItem(BREAK_LOGS_KEY)) || [];
 
     let isWorking = false;
     let isOnBreak = false;
-    let currentBreakType = ""; // 'lunch' or 'normal'
-
-    // Break Limits (in seconds)
-    const LIMITS = {
-        lunch: 45 * 60,
-        normal: 15 * 60
-    };
-
-    // Accumulated usage for limits
-    let usage = { lunch: 0, normal: 0 };
+    let currentBreakType = "lunch"; 
+    let editingDateKey = null; 
 
     // ==========================================
-    // 2. DOM ELEMENTS
+    // 2. DYNAMIC BREAK CIRCLE INJECTION
     // ==========================================
-    // Main Punch Elements
+    const breakWrap = document.querySelector(".bm-timer-circle-wrap");
+    if (breakWrap) {
+        breakWrap.innerHTML = `
+            <svg width="180" height="180" class="bm-progress-ring">
+                <circle class="bm-progress-ring-bg" cx="90" cy="90" r="80" />
+                <circle class="bm-progress-ring-fill" id="bmTimerProgress" cx="90" cy="90" r="80" />
+            </svg>
+            <div class="bm-timer-content">
+                <div class="bm-timer-text" id="bmTimerDisplay">00:00:00</div>
+                <div class="bm-timer-label">Total Duration</div>
+            </div>
+        `;
+    }
+
+    // ==========================================
+    // 3. DOM ELEMENTS
+    // ==========================================
     const punchBtn = document.getElementById("punchBtn");
     const timerDisplay = document.getElementById("timerDisplay");
     const productionDisplay = document.getElementById("productionDisplay");
     const statusMsg = document.getElementById("punchStatusMsg");
     const dateDisplay = document.getElementById("currentDateDisplay");
-    // Break Management Elements
+
     const bmEls = {
-        timerDisplay: document.getElementById("bmTimerDisplay"),
+        timerDisplay: document.getElementById("bmTimerDisplay"), 
         btnIn: document.getElementById("bmBtnIn"),
         btnOut: document.getElementById("bmBtnOut"),
         breakSelect: document.getElementById("bmBreakTypeSelect"),
@@ -67,7 +102,6 @@ const emp_id = localStorage.getItem('employee_id')
         remainingTime: document.getElementById("bmRemainingTime"),
     };
 
-    // Metrics & Timeline Elements
     const metricEls = {
         todayVal: document.getElementById("todayVal"),
         barToday: document.getElementById("barToday"),
@@ -77,7 +111,6 @@ const emp_id = localStorage.getItem('employee_id')
         mainLogBody: document.getElementById("logTableBody")
     };
 
-    // Calendar Elements
     const calEls = {
         grid: document.getElementById("daysGrid"),
         label: document.getElementById("calMonthYear"),
@@ -87,37 +120,29 @@ const emp_id = localStorage.getItem('employee_id')
         modal: document.getElementById("attModal"),
         closeBtn: document.getElementById("attCloseBtn"),
         bottomCloseBtn: document.getElementById("attCloseBtnBottom"),
-        tableBody: document.getElementById("attTableBody")
+        tableBody: document.getElementById("attTableBody"),
+        monthSelect: document.getElementById("navMonthSelect"),
+        yearSelect: document.getElementById("navYearSelect")
     };
 
-    let currentDate = new Date(); // For Calendar
-
-    // set default month picker to current month and wire up change
-    const monthPicker = document.getElementById("monthSelector");
-    if (monthPicker) {
-        const now = new Date();
-        monthPicker.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-        monthPicker.addEventListener("change", loadHistoryTable);
-    }
-
-    const loadBtn = document.getElementById("loadMonthBtn");
-    if (loadBtn) {
-        loadBtn.addEventListener("click", loadHistoryTable);
-    }
-
-    // cache for currently displayed attendance records (month view)
+    let currentDate = new Date(); 
     const attendanceCache = {};
 
     // ==========================================
-    // 3. HELPER FUNCTIONS
+    // 4. HELPER FUNCTIONS
     // ==========================================
-
     function formatTime(ms) {
         const totalSeconds = Math.floor(ms / 1000);
         const h = Math.floor(totalSeconds / 3600);
         const m = Math.floor((totalSeconds % 3600) / 60);
         const s = totalSeconds % 60;
         return `${pad(h)}:${pad(m)}:${pad(s)}`;
+    }
+
+    function formatHrMin(ms) {
+        const h = Math.floor(ms / 3600000);
+        const m = Math.floor((ms % 3600000) / 60000);
+        return `${h}hr ${m}min`;
     }
 
     function pad(n) { return n < 10 ? "0" + n : n; }
@@ -134,125 +159,144 @@ const emp_id = localStorage.getItem('employee_id')
     setInterval(updateHeaderTime, 1000);
     updateHeaderTime();
 
-    // Add row to Bottom Log Panel
-    function addMainLog(status, note) {
+    function loadDailyLogs() {
+        if (metricEls.mainLogBody) metricEls.mainLogBody.innerHTML = "";
+        dailyLogs.forEach(log => {
+            const row = `<tr><td>${log.time}</td><td><strong>${log.status}</strong></td><td>${log.note}</td></tr>`;
+            if(metricEls.mainLogBody) metricEls.mainLogBody.innerHTML = row + metricEls.mainLogBody.innerHTML;
+        });
+    }
+
+    function addMainLog(status, note, save = true) {
         const timeStr = new Date().toLocaleTimeString('en-US', { hour12: false });
         const row = `<tr><td>${timeStr}</td><td><strong>${status}</strong></td><td>${note}</td></tr>`;
-        if (metricEls.mainLogBody) {
-            metricEls.mainLogBody.innerHTML = row + metricEls.mainLogBody.innerHTML;
+        if (metricEls.mainLogBody) metricEls.mainLogBody.innerHTML = row + metricEls.mainLogBody.innerHTML;
+        if (save) {
+            dailyLogs.push({ time: timeStr, status, note });
+            localStorage.setItem(DAILY_LOGS_KEY, JSON.stringify(dailyLogs));
         }
     }
 
-  
-    function updateTimeline() {
-
-        if (!isWorking && !isOnBreak) return;
-
-        const now = new Date();
-
-        const currentDecimal =
-            now.getHours() +
-            (now.getMinutes() / 60) +
-            (now.getSeconds() / 3600);
-
-        let percent = ((currentDecimal - SHIFT_START_HR) / TOTAL_HOURS) * 100;
-
-        percent = Math.max(0, Math.min(100, percent));
-
-        const seg = document.createElement("div");
-
-        seg.className = isOnBreak
-            ? "timeline-segment yellow"
-            : "timeline-segment green";
-
-        seg.style.left = percent + "%";
-        seg.style.width = "0.2%";
-
-        metricEls.timelineTrack.appendChild(seg);
+    function convertTo24(time12) {
+        if (!time12 || time12 === "-") return "";
+        const match = time12.match(/(\d+):(\d+)\s*(AM|PM)/i);
+        if (!match) return "";
+        let [ , h, m, modifier ] = match;
+        h = parseInt(h, 10);
+        if (modifier.toUpperCase() === 'PM' && h < 12) h += 12;
+        if (modifier.toUpperCase() === 'AM' && h === 12) h = 0;
+        return `${String(h).padStart(2, '0')}:${m}`;
     }
 
+    function updateMetricsUI(displayMs) {
+        if(timerDisplay) timerDisplay.innerText = formatTime(displayMs);
+        
+        const formattedActiveTime = formatHrMin(displayMs);
 
-       function convertTo24(time12) {
-        if (!time12) return "";
-        const date = new Date("1970-01-01 " + time12);
-        if (isNaN(date.getTime())) return "";
-        return date.toTimeString().slice(0, 5);
-    }
+        if(productionDisplay) productionDisplay.innerText = `Active : ${formattedActiveTime}`;
+        if(metricEls.todayVal) metricEls.todayVal.innerText = formattedActiveTime;
+        if(metricEls.barToday) metricEls.barToday.style.width = Math.min((displayMs / (8 * 3600000)) * 100, 100) + '%';
+        
+        const currentWeekMs = baselineWeeklyMs + displayMs;
+        const currentMonthMs = baselineMonthlyMs + displayMs;
+        
+        const wHrs = Math.floor(currentWeekMs / 3600000);
+        const wMins = Math.floor((currentWeekMs % 3600000) / 60000);
+        const mHrs = Math.floor(currentMonthMs / 3600000);
+        const mMins = Math.floor((currentMonthMs % 3600000) / 60000);
+        
+        const weekValEl = document.getElementById("weekVal");
+        const monthValEl = document.getElementById("monthVal");
+        const weekBar = document.querySelector(".blue-fill");
+        const monthBar = document.querySelector(".purple-fill");
 
-    // Convert "10:30" -> "10:30 AM"
-    function convertTo12(time24) {
-        if (!time24) return "--:--";
-        const [h, m] = time24.split(":");
-        const date = new Date();
-        date.setHours(h, m);
-        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-    }
+        if (weekValEl) {
+            weekValEl.innerText = `${wHrs}hr ${wMins}min`;
+            const sibling = weekValEl.nextElementSibling;
+            if (sibling && sibling.classList.contains('target')) sibling.style.display = 'none';
+        }
+        if (monthValEl) {
+            monthValEl.innerText = `${mHrs}hr ${mMins}min`;
+            const sibling = monthValEl.nextElementSibling;
+            if (sibling && sibling.classList.contains('target')) sibling.style.display = 'none';
+        }
 
-    function getHistory() {
-        try {
-            return JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY)) || {};
-        } catch (e) {
-            return {};
+        if (weekBar) weekBar.style.width = Math.min((currentWeekMs / (40 * 3600000)) * 100, 100) + "%"; 
+        if (monthBar) monthBar.style.width = Math.min((currentMonthMs / (160 * 3600000)) * 100, 100) + "%";
+
+        const progress = document.getElementById("timerProgress");
+        if (progress) {
+            const radius = 70;
+            const circumference = 2 * Math.PI * radius;
+            const percent = Math.min(displayMs / (8 * 3600000), 1);
+            progress.style.strokeDasharray = circumference;
+            progress.style.strokeDashoffset = circumference - (percent * circumference);
         }
     }
-    // ==========================================
-    // 4. WORK TIMER LOGIC
-    // ==========================================
 
+    function saveTimelineSession() { localStorage.setItem(TIMELINE_KEY, JSON.stringify(timelineSessions)); }
+    function closeLastSession(endTime) {
+        if (timelineSessions.length > 0) {
+            let last = timelineSessions[timelineSessions.length - 1];
+            if (!last.end) last.end = endTime;
+        }
+    }
+
+    function drawTimeline() {
+        if (!metricEls.timelineTrack) return;
+        metricEls.timelineTrack.innerHTML = ""; 
+        let displaySessions = [...timelineSessions];
+        if (isWorking || isOnBreak) {
+            displaySessions.push({ type: isOnBreak ? 'break' : 'work', start: isOnBreak ? breakStartTime : workStartTime, end: Date.now() });
+        }
+
+        displaySessions.forEach(sess => {
+            if (!sess.start || !sess.end) return;
+            let sDate = new Date(sess.start);
+            let eDate = new Date(sess.end);
+            let sDec = sDate.getHours() + (sDate.getMinutes() / 60) + (sDate.getSeconds() / 3600);
+            let eDec = eDate.getHours() + (eDate.getMinutes() / 60) + (eDate.getSeconds() / 3600);
+            let sPct = ((sDec - SHIFT_START_HR) / TOTAL_HOURS) * 100;
+            let widthPct = ((eDec - sDec) / TOTAL_HOURS) * 100;
+
+            if (sPct < 0) { widthPct += sPct; sPct = 0; }
+            if (sPct + widthPct > 100) widthPct = 100 - sPct;
+            if (widthPct <= 0 || sPct >= 100) return;
+
+            let div = document.createElement("div");
+            div.className = sess.type === 'break' ? "timeline-segment yellow" : "timeline-segment green";
+            div.style.left = sPct + "%";
+            div.style.width = widthPct + "%";
+            metricEls.timelineTrack.appendChild(div);
+        });
+    }
+
+    function calculateTotalWorkFromTimeline() {
+        let total = 0;
+        timelineSessions.forEach(s => { if (s.type === 'work' && s.end && s.start) total += (s.end - s.start); });
+        return total;
+    }
+
+    // ==========================================
+    // 5. WORK TIMER LOGIC
+    // ==========================================
     function startWorkTimer() {
         if (workTimerInterval) clearInterval(workTimerInterval);
-
-        workStartTime = Date.now();
         isWorking = true;
         isOnBreak = false;
 
-        // UI Updates
         punchBtn.innerText = "Punch Out";
         punchBtn.classList.add("mode-out");
         statusMsg.innerHTML = `<i class="fa-solid fa-clock"></i> Currently working...`;
         statusMsg.style.color = "#ff6b00";
 
-        // Enable Break Controls
-        bmEls.btnIn.disabled = false;
-        bmEls.breakSelect.disabled = false;
+        if(bmEls.btnIn) bmEls.btnIn.disabled = false;
+        if(bmEls.breakSelect) bmEls.breakSelect.disabled = false;
 
         workTimerInterval = setInterval(() => {
-            const now = Date.now();
-            const currentSessionMs = now - workStartTime;
-            const totalDisplayMs = totalWorkMs + currentSessionMs;
-
-            // Update Main Timer
-            timerDisplay.innerText = formatTime(totalDisplayMs);
-            productionDisplay.innerText = `Active : ${(totalDisplayMs / 3600000).toFixed(2)} hrs`;
-
-            // Update Metrics (Work Today)
-            const hrs = totalDisplayMs / 3600000;
-            metricEls.todayVal.innerText = hrs.toFixed(2);
-            // 8 hours target
-            metricEls.barToday.style.width = Math.min((hrs / 8) * 100, 100) + '%';
-            // const progress = document.getElementById("timerProgress");
-
-            // if(progress){
-            //     const percent = Math.min((hrs / 8) * 360, 360);
-            //     progress.style.transform = rotate(${percent}deg);
-
-            //     }
-            const progress = document.getElementById("timerProgress");
-
-            if (progress) {
-
-                const radius = 70;
-                const circumference = 2 * Math.PI * radius;
-
-                const percent = Math.min(hrs / 8, 1);
-                
-                const offset = circumference - percent * circumference;
-
-                progress.style.strokeDashoffset = offset;
-            }
-
-            updateTimeline();
-
+            const totalDisplayMs = totalWorkMs + (Date.now() - workStartTime);
+            updateMetricsUI(totalDisplayMs);
+            drawTimeline();
         }, 1000);
     }
 
@@ -260,319 +304,347 @@ const emp_id = localStorage.getItem('employee_id')
         if (workTimerInterval) clearInterval(workTimerInterval);
         if (isWorking) {
             totalWorkMs += Date.now() - workStartTime;
+            closeLastSession(Date.now());
+            saveTimelineSession();
         }
         isWorking = false;
     }
 
     // ==========================================
-    // 5. BREAK TIMER LOGIC
+    // 6. BREAK TIMER LOGIC 
     // ==========================================
+    function updateBreakCircleUI(additionalSeconds = 0) {
+        let type = "lunch";
+        if (bmEls.breakSelect) type = bmEls.breakSelect.value.toLowerCase().trim();
+        
+        const limitSec = LIMITS[type] || LIMITS.lunch;
+        const usedSec = (usage[type] || 0) + additionalSeconds;
 
-    if (bmEls.btnIn) {
-        bmEls.btnIn.addEventListener("click", () => {
-            if (!isWorking && totalWorkMs === 0) {
-                alert("Please Punch In first to start work!");
-                return;
+        if (bmEls.timerDisplay) bmEls.timerDisplay.textContent = formatTime(usedSec * 1000);
+
+        const breakProgress = document.getElementById("bmTimerProgress");
+        if (breakProgress) {
+            breakProgress.classList.remove("lunch-fill", "normal-fill", "overtime-fill");
+            breakProgress.classList.add(type === "lunch" ? "lunch-fill" : "normal-fill");
+
+            const radius = 80;
+            const circumference = 2 * Math.PI * radius; 
+            const percent = Math.min(usedSec / limitSec, 1);
+            breakProgress.style.strokeDasharray = circumference;
+            breakProgress.style.strokeDashoffset = circumference - (percent * circumference);
+
+            if (usedSec > limitSec) {
+                breakProgress.classList.add("overtime-fill");
+                if (bmEls.timerDisplay) bmEls.timerDisplay.style.color = "#d32f2f";
+                if (bmEls.limitWarning) bmEls.limitWarning.style.display = "block";
+            } else {
+                if (bmEls.timerDisplay) bmEls.timerDisplay.style.color = "#333";
+                if (bmEls.limitWarning) bmEls.limitWarning.style.display = "none";
             }
+        }
+    }
 
-            // 1. Pause Work Timer
+    if (bmEls.breakSelect) {
+        bmEls.breakSelect.addEventListener("change", () => {
+            if (!isOnBreak) updateBreakCircleUI(0);
+        });
+    }
+
+    // BREAK IN
+    if (bmEls.btnIn) {
+        bmEls.btnIn.addEventListener("click", (e) => {
+            e.preventDefault(); // <-- PREVENTS PAGE RELOAD
+            
+            if (!isWorking) return alert("You must be actively punched in to start a break.");
+            
             pauseWorkTimer();
             statusMsg.innerHTML = `<i class="fa-solid fa-mug-hot"></i> On Break...`;
-            statusMsg.style.color = "#FF5B1E"; // Orange
+            statusMsg.style.color = "#FF5B1E";
             isOnBreak = true;
-
-            // 2. Start Break Logic
             breakStartTime = Date.now();
-            currentBreakType = bmEls.breakSelect.value;
-            const typeLabel = currentBreakType === "lunch" ? "Lunch Break" : "Normal Break";
+            currentBreakType = bmEls.breakSelect.value.toLowerCase().trim();
 
-            // UI Swaps
+            fetch("http://13.51.167.95:8000/api/employee-break/start/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: emp_id, break_type: currentBreakType })
+            }).catch(err => console.error("Break Start API Error:", err));
+
+            timelineSessions.push({ type: 'break', start: breakStartTime, end: null });
+            saveTimelineSession();
+
+            const typeLabel = currentBreakType === "lunch" ? "Lunch Break" : "Normal Break";
             bmEls.btnIn.style.display = "none";
             bmEls.btnOut.style.display = "flex";
             bmEls.breakSelect.disabled = true;
-            punchBtn.disabled = true; // Cannot punch out during break
-
+            punchBtn.disabled = true;
             bmEls.statusBadge.textContent = `On ${typeLabel}`;
             bmEls.statusBadge.className = "bm-badge bm-badge-primary";
-
             addMainLog("Break Started", typeLabel);
 
-            // 3. Start Break Interval
             if (breakTimerInterval) clearInterval(breakTimerInterval);
             breakTimerInterval = setInterval(() => {
-                const now = Date.now();
-                const currentBreakMs = now - breakStartTime;
-                const totalDisplayMs = totalBreakMs + currentBreakMs;
-
-                // Update Break Timer Circle
+                const currentBreakMs = Date.now() - breakStartTime;
                 const diffInSeconds = Math.floor(currentBreakMs / 1000);
-                bmEls.timerDisplay.textContent = formatTime(currentBreakMs);
-
-                // Check Limits
-                const limitSec = LIMITS[currentBreakType];
-                const usedSec = usage[currentBreakType] + diffInSeconds;
-
-                if (usedSec > limitSec) {
-                    bmEls.timerDisplay.style.color = "#d32f2f"; // Red
-                    bmEls.limitWarning.style.display = "block";
-                }
-
-                updateTimeline(); // Draws yellow segments
-
+                updateBreakCircleUI(diffInSeconds); 
+                drawTimeline();
             }, 1000);
         });
     }
 
+    // BREAK OUT
     if (bmEls.btnOut) {
-        bmEls.btnOut.addEventListener("click", () => {
-            // 1. Stop Break Timer
+        bmEls.btnOut.addEventListener("click", (e) => {
+            e.preventDefault(); // <-- PREVENTS PAGE RELOAD
+            
+            if (!isOnBreak) return; // Prevent execution if not actually on a break
+            
+            fetch("http://13.51.167.95:8000/api/employee-break/end/", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: emp_id, break_type: currentBreakType })
+            }).catch(err => console.error("Break End API Error:", err));
+
             clearInterval(breakTimerInterval);
             const endTime = Date.now();
             const durationMs = endTime - breakStartTime;
             const durationSec = Math.floor(durationMs / 1000);
 
-            // Accumulate Data
             totalBreakMs += durationMs;
-            usage[currentBreakType] += durationSec;
-
-            // 2. Resume Work Timer
+            usage[currentBreakType] = (usage[currentBreakType] || 0) + durationSec;
+            localStorage.setItem(USAGE_KEY, JSON.stringify(usage));
+            
+            closeLastSession(endTime); 
             isOnBreak = false;
-            startWorkTimer(); // Resume working
+            
+            const savedBreakStartTime = breakStartTime; 
+            breakStartTime = null; 
+            workStartTime = Date.now(); 
+            
+            timelineSessions.push({ type: 'work', start: workStartTime, end: null });
+            saveTimelineSession();
+
+            startWorkTimer(); 
             addMainLog("Break Ended", "Resumed Work");
 
-            // UI Resets
             bmEls.btnIn.style.display = "flex";
             bmEls.btnOut.style.display = "none";
             bmEls.breakSelect.disabled = false;
-            punchBtn.disabled = false; // Enable punch out button
+            punchBtn.disabled = false;
 
-            bmEls.timerDisplay.textContent = "00:00:00";
-            bmEls.timerDisplay.style.color = "#333";
-            bmEls.limitWarning.style.display = "none";
             bmEls.statusBadge.textContent = "Not Active";
             bmEls.statusBadge.className = "bm-badge bm-badge-light";
 
-            // Update Logs & Stats
-            bmAddToHistoryLog(currentBreakType, breakStartTime, endTime, durationSec);
+            updateBreakCircleUI(0);
+            bmAddToHistoryLog(currentBreakType, savedBreakStartTime, endTime, durationSec);
             bmUpdateProgressStats();
         });
     }
 
     // ==========================================
-    // 6. MAIN PUNCH BUTTON LOGIC
+    // 7. MAIN PUNCH BUTTON LOGIC
     // ==========================================
-punchBtn.addEventListener("click", () => {
+    if (punchBtn) {
+        punchBtn.addEventListener("click", (e) => {
+            e.preventDefault(); // <-- PREVENTS PAGE RELOAD
 
-    const nowStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const nowStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-    if (!isWorking && !isOnBreak && totalWorkMs === 0) {
+            if (!isWorking && !isOnBreak && totalWorkMs === 0) {
+                fetch("http://13.51.167.95:8000/api/employee-attendence/create/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: emp_id })
+                }).catch(err => console.error("Punch In Error:", err));
 
-        fetch("http://13.60.26.193:8000/api/employee-attendence/create/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: emp_id })
-        })
+                workStartTime = Date.now();
+                punchInTimeStr = nowStr;
+                totalWorkMs = 0; 
+                
+                timelineSessions.push({ type: 'work', start: workStartTime, end: null });
+                saveTimelineSession();
+                startWorkTimer();
+                addMainLog("Punch In", "Shift Started");
+            }
+            else if (isWorking) {
+                fetch("http://13.51.167.95:8000/api/employee-attendence/checkout/", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: emp_id })
+                });
+
+                pauseWorkTimer(); 
+                punchBtn.innerText = "Shift Completed";
+                punchBtn.disabled = true;
+
+                statusMsg.innerHTML = `<i class="fa-solid fa-check-circle"></i> Punch out recorded`;
+                statusMsg.style.color = "#4caf50";
+
+                if (bmEls.btnIn) bmEls.btnIn.disabled = true;
+                if (bmEls.btnOut) bmEls.btnOut.disabled = true;
+                if (bmEls.breakSelect) bmEls.breakSelect.disabled = true;
+
+                addMainLog("Punch Out", "Shift Ended");
+                saveCalendarHistory('Present', punchInTimeStr, nowStr);
+                
+                updateMetricsUI(totalWorkMs);
+                drawTimeline();
+            }
+        });
+    }
+
+    window.addEventListener("load", () => {
+        loadDailyLogs();
+        loadBreakLogs();
+        bmUpdateProgressStats(); 
+        updateBreakCircleUI(0); 
+        loadHistoryTable(); 
+
+        fetch(`http://13.51.167.95:8000/api/attendence-status/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
+            if (data.status === "punched_in") {
+                punchBtn.innerText = "Punch Out";
+                punchBtn.classList.add("mode-out");
+                isWorking = true;
+                
+                if (timelineSessions.length > 0) {
+                    let lastSession = timelineSessions[timelineSessions.length - 1];
+                    if (lastSession.type === 'work' && !lastSession.end) workStartTime = lastSession.start;
+                    else workStartTime = new Date(data.checkin).getTime();
+                    totalWorkMs = calculateTotalWorkFromTimeline();
+                } else {
+                    workStartTime = new Date(data.checkin).getTime();
+                    totalWorkMs = 0;
+                    timelineSessions.push({ type: 'work', start: workStartTime, end: null });
+                    saveTimelineSession();
+                }
+                startWorkTimer();
 
-            
+            } else if (data.status === "punched_out") {
+                punchBtn.innerText = "Shift Completed";
+                statusMsg.innerHTML = `<i class="fa-solid fa-fingerprint"></i> Shift Completed `
+                punchBtn.disabled = true;
 
-           
+                if (bmEls.btnIn) bmEls.btnIn.disabled = true;
+                if (bmEls.btnOut) bmEls.btnOut.disabled = true;
+                if (bmEls.breakSelect) bmEls.breakSelect.disabled = true;
+                
+                totalWorkMs = calculateTotalWorkFromTimeline();
+                updateMetricsUI(totalWorkMs);
+                drawTimeline(); 
+            } else {
+                punchBtn.innerText = "Punch In";
+                isWorking = false;
 
+                if (bmEls.btnIn) bmEls.btnIn.disabled = true;
+                if (bmEls.btnOut) bmEls.btnOut.disabled = true;
+                if (bmEls.breakSelect) bmEls.breakSelect.disabled = true;
+                
+                timelineSessions = []; localStorage.removeItem(TIMELINE_KEY);
+                usage = { lunch: 0, normal: 0 }; localStorage.removeItem(USAGE_KEY);
+                breakLogs = []; localStorage.removeItem(BREAK_LOGS_KEY);
+                dailyLogs = []; localStorage.removeItem(DAILY_LOGS_KEY);
+                totalWorkMs = 0;
+                
+                updateMetricsUI(0);
+                updateBreakCircleUI(0);
+                drawTimeline();
+                bmUpdateProgressStats();
+                loadBreakLogs();
+                loadDailyLogs();
+            }
         })
-        .catch(err => console.error("Punch In Error:", err));
+        .catch(err => console.error("Status fetch error:", err));
+    });
 
-        // save button state
-        // localStorage.setItem("attendanceStatus" + emp_id, "punched_in");
-
-        // save start time for timer
-        workStartTime = Date.now();
-        // localStorage.setItem("workStartTime_" + emp_id, workStartTime);
-
-        punchInTimeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
-        startWorkTimer();
-        addMainLog("Punch In", "Shift Started");
-
-    }
-
-    else if (isWorking) {
-        fetch("http://13.60.26.193:8000/api/employee-attendence/checkout/", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: emp_id })
-            });
-        // PUNCH OUT
-        pauseWorkTimer();
-
-        // localStorage.setItem("attendanceStatus" + emp_id, "punched_out");
-
-        // // remove stored timer
-        // localStorage.removeItem("workStartTime_" + emp_id);
-
-        punchBtn.innerText = "Shift Completed";
-        punchBtn.disabled = true;
-
-        statusMsg.innerHTML = `<i class="fa-solid fa-check-circle"></i> Punch out recorded`;
-        statusMsg.style.color = "#4caf50";
-
-        bmEls.btnIn.disabled = true;
-        bmEls.breakSelect.disabled = true;
-
-        addMainLog("Punch Out", "Shift Ended");
-
-        saveCalendarHistory('Present', punchInTimeStr, nowStr);
-    }
-
-});
-
-
-// window.addEventListener("load", () => {
-
-//     const status = localStorage.getItem("attendanceStatus" + emp_id);
-//     const savedStart = localStorage.getItem("workStartTime_" + emp_id);
-
-//     if (status === "punched_in") {
-
-//         punchBtn.innerText = "Punch Out";
-//         isWorking = true;
-
-//         if (savedStart) {
-
-//             workStartTime = parseInt(savedStart);
-
-//             const now = Date.now();
-//             totalWorkMs = now - workStartTime;
-
-//             startWorkTimer(); // resume timer
-//         }
-//     }
-
-//     if (status === "punched_out") {
-
-//         punchBtn.innerText = "Shift Completed";
-//         punchBtn.disabled = true;
-
-//     }
-
-// });
-
-
-
-window.addEventListener("load", () => {
-
-fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
-.then(res => res.json())
-.then(data => {
-
-    console.log("Attendance Status:", data);
-
-    if (data.status === "punched_in") {
-
-        punchBtn.innerText = "Punch Out";
-        isWorking = true;
-
-        // resume timer from backend checkin
-        workStartTime = new Date(data.checkin).getTime();
-
-        const now = Date.now();
-        totalWorkMs = now - workStartTime;
-
-        startWorkTimer();
-
-    }
-
-    else if (data.status === "punched_out") {
-
-
-        punchBtn.innerText = "Shift Completed";
-        statusMsg.innerHTML = `<i class="fa-solid fa-fingerprint"></i>Shift Completed `
-        punchBtn.disabled = true;
-
-    }
-
-    else {
-
-        punchBtn.innerText = "Punch In";
-        isWorking = false;
-
-    }
-
-})
-.catch(err => console.error("Status fetch error:", err));
-
-});
     // ==========================================
-    // 7. STATS & HISTORY HELPERS
+    // 8. STATS & BREAK HISTORY HELPERS
     // ==========================================
-
     function bmUpdateProgressStats() {
-        const totalSec = usage.lunch + usage.normal;
+        const totalSec = (usage.lunch || 0) + (usage.normal || 0);
+        
+        const lunchMins = Math.floor((usage.lunch || 0) / 60);
+        const lunchPct = Math.min(((usage.lunch || 0) / LIMITS.lunch) * 100, 100);
+        if(bmEls.lunchUsed) bmEls.lunchUsed.textContent = lunchMins;
+        if(bmEls.lunchBar) {
+            bmEls.lunchBar.style.width = `${lunchPct}%`;
+            bmEls.lunchBar.style.backgroundColor = lunchPct >= 100 ? "#d32f2f" : "#FF5B1E";
+        }
 
-        // Update Bars
-        const lunchMins = Math.floor(usage.lunch / 60);
-        const lunchPct = Math.min((usage.lunch / LIMITS.lunch) * 100, 100);
-        bmEls.lunchUsed.textContent = lunchMins;
-        bmEls.lunchBar.style.width = `${lunchPct}%`;
-        if (lunchPct >= 100) bmEls.lunchBar.style.backgroundColor = "#d32f2f";
+        const normalMins = Math.floor((usage.normal || 0) / 60);
+        const normalPct = Math.min(((usage.normal || 0) / LIMITS.normal) * 100, 100);
+        if(bmEls.normalUsed) bmEls.normalUsed.textContent = normalMins;
+        if(bmEls.normalBar) {
+            bmEls.normalBar.style.width = `${normalPct}%`;
+            bmEls.normalBar.style.backgroundColor = normalPct >= 100 ? "#d32f2f" : "#00C853";
+        }
 
-        const normalMins = Math.floor(usage.normal / 60);
-        const normalPct = Math.min((usage.normal / LIMITS.normal) * 100, 100);
-        bmEls.normalUsed.textContent = normalMins;
-        bmEls.normalBar.style.width = `${normalPct}%`;
-        if (normalPct >= 100) bmEls.normalBar.style.backgroundColor = "#d32f2f";
-
-        // Total Break Metrics
         const totalBreakMins = Math.floor(totalSec / 60);
-        metricEls.breakVal.innerText = totalBreakMins + 'm';
-        metricEls.barBreak.style.width = Math.min((totalBreakMins / 60) * 100, 100) + '%';
+        if(metricEls.breakVal) metricEls.breakVal.innerText = `${totalBreakMins}m`;
+        if(metricEls.barBreak) metricEls.barBreak.style.width = Math.min((totalBreakMins / 60) * 100, 100) + '%';
+        
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        if(bmEls.totalTime) bmEls.totalTime.textContent = `${h}h ${m}m`;
+        
+        const remaining = Math.max(0, ((LIMITS.lunch + LIMITS.normal) / 60) - totalBreakMins);
+        if(bmEls.remainingTime) {
+            bmEls.remainingTime.textContent = `${remaining}m`;
+            const dotContainer = bmEls.remainingTime.parentElement;
+            if (dotContainer) {
+                const dot = dotContainer.querySelector('.bm-dot');
+                if (dot) {
+                    dot.style.backgroundColor = remaining <= 0 ? "#d32f2f" : "#00C853";
+                }
+            }
+        }
+    }
 
-        bmEls.totalTime.textContent = `${Math.floor(totalSec / 3600)}h ${Math.floor((totalSec % 3600) / 60)}m`;
-
-        const maxLimitMins = (LIMITS.lunch + LIMITS.normal) / 60;
-        const remaining = Math.max(0, maxLimitMins - totalBreakMins);
-        bmEls.remainingTime.textContent = `${remaining}m;`
+    function loadBreakLogs() {
+        if (bmEls.logTable) {
+            bmEls.logTable.innerHTML = "";
+            if (breakLogs.length === 0 && bmEls.emptyState) {
+                bmEls.logTable.appendChild(bmEls.emptyState);
+                bmEls.emptyState.style.display = "table-row";
+            } else {
+                breakLogs.forEach(log => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `<td><span style="font-weight:500">${log.typeLabel}</span></td><td>${log.start}</td><td>${log.end}</td><td style="font-family:monospace; font-weight:600">${log.dur}</td><td>${log.statusHtml}</td>`;
+                    bmEls.logTable.prepend(row);
+                });
+            }
+        }
     }
 
     function bmAddToHistoryLog(type, start, end, duration) {
         if (bmEls.emptyState) bmEls.emptyState.style.display = "none";
-
         const startDate = new Date(start);
         const endDate = new Date(end);
         const timeStartStr = startDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
         const timeEndStr = endDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
         const durStr = formatTime(duration * 1000);
         const typeLabel = type === "lunch" ? "Lunch Break" : "Normal Break";
-
         const limitSec = LIMITS[type];
         let statusHtml = '<span class="bm-badge bm-badge-success">On Time</span>';
         if (duration > limitSec) statusHtml = '<span class="bm-badge bm-badge-danger">Overtime</span>';
 
+        const logItem = { typeLabel, start: timeStartStr, end: timeEndStr, dur: durStr, statusHtml };
+        breakLogs.push(logItem);
+        localStorage.setItem(BREAK_LOGS_KEY, JSON.stringify(breakLogs));
+
         const row = document.createElement("tr");
-        row.innerHTML = `
-            <td><span style="font-weight:500">${typeLabel}</span></td>
-            <td>${timeStartStr}</td>
-            <td>${timeEndStr}</td>
-            <td style="font-family:monospace; font-weight:600">${durStr}</td>
-            <td>${statusHtml}</td>
-        `;
+        row.innerHTML = `<td><span style="font-weight:500">${typeLabel}</span></td><td>${timeStartStr}</td><td>${timeEndStr}</td><td style="font-family:monospace; font-weight:600">${durStr}</td><td>${statusHtml}</td>`;
         bmEls.logTable.prepend(row);
     }
 
     // ==========================================
-    // 8. CALENDAR & MODAL LOGIC (Existing)
+    // 9. CALENDAR, MODAL & HISTORY LOGIC 
     // ==========================================
-
     function saveCalendarHistory(status, inTime, outTime) {
         const todayKey = new Date().toLocaleDateString('en-CA');
         let history = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY)) || {};
-
-        history[todayKey] = {
-            date: todayKey,
-            status: status,
-            inTime: inTime,
-            outTime: outTime
-        };
+        history[todayKey] = { date: todayKey, status: status, inTime: inTime, outTime: outTime };
         localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
         renderCalendar();
     }
@@ -593,19 +665,15 @@ fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
                 div.classList.add("day-cell", "faded");
                 calEls.grid.appendChild(div);
             }
-
             for (let i = 1; i <= daysInMonth; i++) {
                 const div = document.createElement("div");
                 div.classList.add("day-cell");
                 div.innerText = i;
-
                 const mStr = String(month + 1).padStart(2, '0');
                 const dStr = String(i).padStart(2, '0');
                 const dateKey =`${year}-${mStr}-${dStr}`;
-
                 if (dateKey === todayKey) div.classList.add("today");
                 if (history[dateKey]) div.classList.add("present");
-
                 calEls.grid.appendChild(div);
             }
         }
@@ -614,129 +682,144 @@ fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
     if (calEls.prev) calEls.prev.addEventListener("click", () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
     if (calEls.next) calEls.next.addEventListener("click", () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
 
-    // Modal
-    // (history loading implementation lives further down - uses backend and month selector)
+    function initDropdowns() {
+        if (!calEls.monthSelect || !calEls.yearSelect) return;
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        calEls.monthSelect.innerHTML = "";
+        monthNames.forEach((m, index) => calEls.monthSelect.appendChild(new Option(m, index)));
+        const currentYear = new Date().getFullYear();
+        calEls.yearSelect.innerHTML = "";
+        for (let y = currentYear - 5; y <= currentYear + 5; y++) calEls.yearSelect.appendChild(new Option(y, y));
+        calEls.monthSelect.value = new Date().getMonth();
+        calEls.yearSelect.value = currentYear;
+        calEls.monthSelect.addEventListener("change", loadHistoryTable);
+        calEls.yearSelect.addEventListener("change", loadHistoryTable);
+    }
+
     async function loadHistoryTable() {
-    // determine selected month/year from picker or default to current
-    const picker = document.getElementById("monthSelector");
-    let year, month;
-    if (picker && picker.value) {
-        const [y, m] = picker.value.split("-");
-        year = parseInt(y, 10);
-        month = parseInt(m, 10) - 1;
-    } else {
-        const now = new Date();
-        year = now.getFullYear();
-        month = now.getMonth();
-        if (picker) picker.value = `${year}-${String(month + 1).padStart(2, '0')}`;
-    }
+        let year = new Date().getFullYear();
+        let month = new Date().getMonth();
 
-    // update modal label
-    const modalLabel = document.getElementById("modalMonthYear");
-    if (modalLabel) {
-        modalLabel.innerText = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
-    }
-
-    const res = await fetch(`http://13.60.26.193:8000/api/employee-attendence-history/${emp_id}/`);
-    const data = await res.json();
-
-    calEls.tableBody.innerHTML = "";
-
-    const attendanceMap = {};
-    data.forEach(item => {
-        attendanceMap[item.date] = item;
-    });
-
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dateObj = new Date(year, month, day);
-        const dateStr = dateObj.toISOString().split("T")[0];
-
-        const record = attendanceMap[dateStr];
-
-        let status = "Absent";
-        let inTime = "";
-        let outTime = "";
-
-        if (record) {
-            status = record.status || "Present";
-
-            if (record.checkin) {
-                const checkinTime = new Date(record.checkin);
-                inTime = checkinTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-            }
-
-            if (record.checkout) {
-                const checkoutTime = new Date(record.checkout);
-                outTime = checkoutTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-            }
+        if (calEls.yearSelect && calEls.monthSelect) {
+            year = parseInt(calEls.yearSelect.value, 10);
+            month = parseInt(calEls.monthSelect.value, 10);
         }
 
-        // cache entry for use by edit popup
-        attendanceCache[dateStr] = { status, inTime, outTime };
+        try {
+            const res = await fetch(`http://13.51.167.95:8000/api/employee-attendence-history/${emp_id}/`);
+            const data = await res.json();
+            const reqRes = await fetch(`http://13.51.167.95:8000/api/admin/attendance-requests/`);
+            const allRequests = await reqRes.json();
+            
+            baselineWeeklyMs = 0;
+            baselineMonthlyMs = 0;
+            const now = new Date();
+            const todayStrLocal = now.toLocaleDateString('en-CA');
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const dayOfWeek = now.getDay() || 7; 
+            const startOfWeek = new Date(now);
+            startOfWeek.setHours(0,0,0,0);
+            startOfWeek.setDate(now.getDate() - dayOfWeek + 1);
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setHours(23,59,59,999);
 
-        const formattedDate = dateObj.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
+            data.forEach(item => {
+                if (item.date === todayStrLocal) return; 
+                if (item.checkin && item.checkout) {
+                    const cIn = new Date(item.checkin);
+                    const cOut = new Date(item.checkout);
+                    const dur = cOut - cIn;
+                    if (dur > 0) {
+                        if (cIn.getMonth() === currentMonth && cIn.getFullYear() === currentYear) baselineMonthlyMs += dur;
+                        if (cIn >= startOfWeek && cIn <= endOfWeek) baselineWeeklyMs += dur;
+                    }
+                }
+            });
+            updateMetricsUI(totalWorkMs);
 
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${formattedDate}</td>
-            <td>${status}</td>
-            <td style="font-family:monospace;">${inTime || '-'}</td>
-            <td style="font-family:monospace;">${outTime || '-'}</td>
-            <td>
-                    <button class="btn-edit-row" data-date="${dateStr}" data-status="${status}" data-intime="${inTime}" data-outtime="${outTime}">
-                       <i class="fa-solid fa-pen"></i>
-                   </button>
-               </td>
-        `;
-        calEls.tableBody.appendChild(tr);
+            const pendingDates = new Set();
+            if (Array.isArray(allRequests)) {
+                allRequests.forEach(req => { if (req.employee == emp_id && req.status === 'Pending') pendingDates.add(req.date); });
+            }
+
+            if(calEls.tableBody) calEls.tableBody.innerHTML = "";
+            const attendanceMap = {};
+            data.forEach(item => { attendanceMap[item.date] = item; });
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateObj = new Date(year, month, day);
+                const offset = dateObj.getTimezoneOffset();
+                const localDateObj = new Date(dateObj.getTime() - (offset*60*1000));
+                const dateStr = localDateObj.toISOString().split("T")[0];
+                const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+                const tr = document.createElement("tr");
+
+                if (pendingDates.has(dateStr)) {
+                    tr.innerHTML = `<td>${formattedDate}</td><td colspan="5" style="text-align:center; color:#ff6b00; font-weight:600; background-color: #fff8f5;"><i class="fa-solid fa-clock-rotate-left"></i> Update Requested (Pending)</td>`;
+                    if(calEls.tableBody) calEls.tableBody.appendChild(tr);
+                    continue; 
+                }
+
+                const record = attendanceMap[dateStr];
+                let status = "-", inTime = "-", outTime = "-", durationStr = "-"; 
+
+                if (record && (record.checkin || record.checkout)) {
+                    status = record.status || "Present";
+                    if (record.checkin) inTime = new Date(record.checkin).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                    if (record.checkout) outTime = new Date(record.checkout).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                    if (record.checkin && record.checkout) {
+                        const diffMs = new Date(record.checkout) - new Date(record.checkin);
+                        if(diffMs > 0) durationStr = formatHrMin(diffMs); 
+                    }
+                } else if (record && record.status && record.status.toLowerCase() === "absent") {
+                    status = "Absent";
+                }
+
+                attendanceCache[dateStr] = { status, inTime, outTime };
+
+                let badgeHtml = `<span style="color:#999; font-weight:bold;">-</span>`;
+                if (status.toLowerCase() === "present") badgeHtml = `<span class="status-badge status-present">Present</span>`;
+                else if (status.toLowerCase() === "absent") badgeHtml = `<span class="status-badge status-absent">Absent</span>`;
+                else if (status !== "-") badgeHtml = `<span class="status-badge">${status}</span>`;
+
+                tr.innerHTML = `<td>${formattedDate}</td><td>${badgeHtml}</td><td style="font-family:monospace;">${inTime}</td><td style="font-family:monospace;">${outTime}</td><td style="font-family:monospace; font-weight:600; color:#4caf50;">${durationStr}</td><td><button class="btn-edit-row" data-date="${dateStr}"><i class="fa-solid fa-pen"></i></button></td>`;
+                if(calEls.tableBody) calEls.tableBody.appendChild(tr);
+            }
+        } catch (e) { console.error("Fetch error:", e); }
     }
-}
 
-
-    if (calEls.viewBtn) calEls.viewBtn.addEventListener("click", () => { loadHistoryTable(); calEls.modal.classList.add("show"); });
+    if (calEls.viewBtn) calEls.viewBtn.addEventListener("click", () => { initDropdowns(); loadHistoryTable(); calEls.modal.classList.add("show"); });
     const closeHistoryModal = () => calEls.modal.classList.remove("show");
     if (calEls.closeBtn) calEls.closeBtn.addEventListener("click", closeHistoryModal);
     if (calEls.bottomCloseBtn) calEls.bottomCloseBtn.addEventListener("click", closeHistoryModal);
-    // window.addEventListener("click", (e) => { if (e.target === calEls.modal) closeModal(); });
     if (calEls.modal) calEls.modal.addEventListener("click", (e) => { if (e.target === calEls.modal) closeHistoryModal(); });
 
-
+    // ==========================================
+    // 10. EDIT MODAL LOGIC
+    // ==========================================
     document.addEventListener("click", function (e) {
         const btn = e.target.closest(".btn-edit-row");
         if (!btn) return;
+        editingDateKey = btn.dataset.date;
+        const record = attendanceCache[editingDateKey] || { status: "-", inTime: "-", outTime: "-" };
 
-        const dateKey = btn.dataset.date;
-        editingDateKey = dateKey;
-
-        // use cached record (from most recent history load)
-        const record = attendanceCache[dateKey] || { status: "Present", inTime: "", outTime: "" };
-
-        // Fill Inputs
         const inTimeInput = document.getElementById("editInTime");
         const outTimeInput = document.getElementById("editOutTime");
-        const inAmpm = document.getElementById("editInAMPM");
-        const outAmpm = document.getElementById("editOutAMPM");
         const statusInput = document.getElementById("editStatus");
-        if (inTimeInput && outTimeInput) {
-            inTimeInput.value = convertTo24(record.inTime);
-            outTimeInput.value = convertTo24(record.outTime);
-            if (inAmpm) inAmpm.value = record.inTime && record.inTime.toUpperCase().includes('PM') ? 'PM' : 'AM';
-            if (outAmpm) outAmpm.value = record.outTime && record.outTime.toUpperCase().includes('PM') ? 'PM' : 'AM';
-            if(statusInput) statusInput.value = record.status || "Present";
-        }
+        
+        if (inTimeInput) inTimeInput.value = convertTo24(record.inTime);
+        if (outTimeInput) outTimeInput.value = convertTo24(record.outTime);
+        if (statusInput) statusInput.value = record.status !== "-" ? record.status : "Present";
 
-        // Toggle Visiblity
-        closeHistoryModal(); // Hide large table if open
+        closeHistoryModal(); 
 
         const editModal = document.getElementById("editModal");
         if (editModal) {
-            document.body.appendChild(editModal);
+            document.body.appendChild(editModal); 
             editModal.style.display = "flex";
             editModal.style.visibility = "visible";
             editModal.style.opacity = "1";
@@ -745,220 +828,75 @@ fetch(`http://13.60.26.193:8000/api/attendence-status/${emp_id}/`)
         }
     });
 
-    // B. Save Button
     const saveEditBtn = document.getElementById("saveEditBtn");
     if (saveEditBtn) {
-        saveEditBtn.addEventListener("click", () => {
+        saveEditBtn.addEventListener("click", (e) => {
+            e.preventDefault(); // <-- PREVENTS PAGE RELOAD
             if (!editingDateKey) return;
             const inTimeInput = document.getElementById("editInTime");
             const outTimeInput = document.getElementById("editOutTime");
-            const inAmpm = document.getElementById("editInAMPM");
-            const outAmpm = document.getElementById("editOutAMPM");
-            const statusInput = document.getElementById("editStatus");
+            const reasonInput = document.getElementById("editReason");
 
-            // time formatting helper
-            function formatWithAMPM(timeVal, ampmVal) {
-                if (!timeVal) return "";
-                let [h, m] = timeVal.split(":");
-                h = parseInt(h, 10);
-                if (ampmVal === 'PM' && h < 12) h += 12;
-                if (ampmVal === 'AM' && h === 12) h = 0;
-                const d = new Date();
-                d.setHours(h, parseInt(m, 10));
-                return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-            }
+            if(!reasonInput || !reasonInput.value) return alert("Please provide a reason for this change.");
 
-            const newStatus = statusInput ? statusInput.value : "Present";
-            const newIn = formatWithAMPM(inTimeInput.value, inAmpm ? inAmpm.value : 'AM');
-            const newOut = formatWithAMPM(outTimeInput.value, outAmpm ? outAmpm.value : 'AM');
+            const updatePayload = {
+                employee: parseInt(emp_id),
+                date: editingDateKey,
+                clock_in: inTimeInput && inTimeInput.value ? inTimeInput.value : null,   
+                clock_out: outTimeInput && outTimeInput.value ? outTimeInput.value : null, 
+                reason: reasonInput.value
+            };
 
-            // update cache
-            attendanceCache[editingDateKey] = { status: newStatus, inTime: newIn, outTime: newOut };
-
-            // update row display if present
-            const rowBtn = document.querySelector(`.btn-edit-row[data-date="${editingDateKey}"]`);
-            if (rowBtn) {
-                const row = rowBtn.closest('tr');
-                if (row) {
-                    row.cells[1].innerText = newStatus;
-                    row.cells[2].innerText = newIn || '-';
-                    row.cells[3].innerText = newOut || '-';
-                }
-            }
-
-            closeEditModal();
+            fetch(`http://13.51.167.95:8000/api/attendance-request/create/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatePayload)
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Network response was not ok");
+                return res.json();
+            })
+            .then(data => {
+                alert("Attendance correction request submitted successfully. Pending Admin approval.");
+                closeEditModal();
+                loadHistoryTable(); 
+                if(calEls.modal) calEls.modal.classList.add("show");
+                if(reasonInput) reasonInput.value = ""; 
+            })
+            .catch(err => {
+                console.error("Failed to submit request:", err);
+                alert("Failed to submit request. Please try again.");
+            });
         });
     }
 
-    // C. Cancel Button
     const cancelEditBtn = document.getElementById("cancelEditBtn");
-    if (cancelEditBtn) {
-        cancelEditBtn.addEventListener("click", () => {
-            closeEditModal();
-            if(calEls.modal) calEls.modal.classList.add("show");
-        });
-    }
+    if (cancelEditBtn) cancelEditBtn.addEventListener("click", (e) => { e.preventDefault(); closeEditModal(); if(calEls.modal) calEls.modal.classList.add("show"); });
 
     function closeEditModal() {
         const editModal = document.getElementById("editModal");
-        if (editModal) {
-            editModal.classList.remove("show");
-            editModal.style.display = "none";
-        }
+        if (editModal) { editModal.classList.remove("show"); editModal.style.display = "none"; }
     }
-    // Initialize Calendar
     renderCalendar();
 
-    // Ensure CSS for Timeline Segments
-    // Add this minimal style injection just in case the CSS is missing for .timeline-segment
+    // ==========================================
+    // 11. CSS INJECTION (FIXED TIMELINE CSS)
+    // ==========================================
     const style = document.createElement('style');
     style.innerHTML = `
-        .timeline-segment { position: absolute; height: 100%; top: 0; }
-        .timeline-segment.green { background-color: #4caf50; }
-        .timeline-segment.yellow { background-color: #ffb300; }
+        .bm-timer-circle-wrap { position: relative; width: 180px; height: 180px; margin: 0 auto; display: flex; justify-content: center; align-items: center; }
+        .bm-progress-ring { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+        .bm-progress-ring-bg { fill: none; stroke: #f1f1f1; stroke-width: 8; }
+        .bm-progress-ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 502.6; stroke-dashoffset: 502.6; transition: stroke-dashoffset 0.4s linear, stroke 0.3s ease; }
+        .bm-timer-content { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .lunch-fill { stroke: #FF5B1E; }
+        .normal-fill { stroke: #00C853; }
+        .overtime-fill { stroke: #d32f2f !important; }
+        .timeline-segment { position: absolute; height: 100%; top: 0; transition: width 0.5s linear; }
+        .timeline-segment.green { background-color: #4caf50 !important; }
+        .timeline-segment.yellow { background-color: #ffb300 !important; }
+        .dot.green { background-color: #4caf50 !important; width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .dot.yellow { background-color: #ffb300 !important; width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
     `;
     document.head.appendChild(style);
-
-});
-
-
-// attendance calender section
-document.addEventListener("DOMContentLoaded", () => {
-    // Elements
-    const modalEls = {
-        overlay: document.getElementById("attModal"),
-        closeBtn: document.getElementById("attCloseBtn"),
-        tableBody: document.getElementById("attTableBody"),
-        
-        // Dropdowns
-        monthSelect: document.getElementById("navMonthSelect"),
-        yearSelect: document.getElementById("navYearSelect")
-    };
-
-    const STORAGE_KEY_HISTORY = "att_history_log"; 
-    let currentModalDate = new Date(); // State
-
-    // --- 1. Initialize Dropdowns ---
-    function initDropdowns() {
-        if (!modalEls.monthSelect || !modalEls.yearSelect) return;
-
-        // Populate Months (Jan - Dec)
-        const monthNames = ["January", "February", "March", "April", "May", "June", 
-                            "July", "August", "September", "October", "November", "December"];
-        
-        modalEls.monthSelect.innerHTML = "";
-        monthNames.forEach((m, index) => {
-            const opt = document.createElement("option");
-            opt.value = index; // 0-11
-            opt.text = m;
-            modalEls.monthSelect.appendChild(opt);
-        });
-
-        // Populate Years (Current Year +/- 5)
-        const currentYear = new Date().getFullYear();
-        modalEls.yearSelect.innerHTML = "";
-        for (let y = currentYear - 5; y <= currentYear + 5; y++) {
-            const opt = document.createElement("option");
-            opt.value = y;
-            opt.text = y;
-            modalEls.yearSelect.appendChild(opt);
-        }
-    }
-
-    // --- 2. Update UI to Match State ---
-    function updateDropdownsUI() {
-        if (modalEls.monthSelect) {
-            modalEls.monthSelect.value = currentModalDate.getMonth();
-        }
-        if (modalEls.yearSelect) {
-            modalEls.yearSelect.value = currentModalDate.getFullYear();
-        }
-    }
-
-    // --- 3. Load Data & Filter ---
-    function loadHistoryTable() {
-        const history = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY)) || {};
-        
-        if (modalEls.tableBody) modalEls.tableBody.innerHTML = "";
-        
-        // Ensure UI matches state before filtering
-        updateDropdownsUI();
-
-        // Filter Logic
-        const targetYear = currentModalDate.getFullYear();
-        const targetMonth = currentModalDate.getMonth();
-
-        const rows = Object.values(history)
-            .map(r => ({ ...r, dateObj: new Date(r.date) }))
-            .filter(r => {
-                return !isNaN(r.dateObj) && 
-                       r.dateObj.getFullYear() === targetYear && 
-                       r.dateObj.getMonth() === targetMonth;
-            })
-            .sort((a, b) => b.dateObj - a.dateObj); // Sort Newest First
-
-        // Handle Empty State
-        if (rows.length === 0) {
-            const monthName = currentModalDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-            if (modalEls.tableBody) {
-                modalEls.tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">No records found for ${monthName}.</td></tr>`;
-            }
-            return;
-        }
-
-        // Render Rows
-        rows.forEach(row => {
-            const tr = document.createElement("tr");
-            let badgeClass = row.status.toLowerCase().includes('absent') ? 'status-absent' : 'status-present';
-            const dateStr = row.dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-
-            tr.innerHTML = `
-                <td>${dateStr}</td>
-                <td><span class="status-pill ${badgeClass}">${row.status}</span></td>
-                <td style="font-family:monospace;">${row.inTime}</td>
-                <td style="font-family:monospace;">${row.outTime}</td>
-                <td><button class="btn-icon-small"><i class="fa-solid fa-pen"></i></button></td>
-            `;
-            modalEls.tableBody.appendChild(tr);
-        });
-    }
-
-    // --- 4. Event Listeners ---
-
-    // Month Change
-    if (modalEls.monthSelect) {
-        modalEls.monthSelect.addEventListener("change", (e) => {
-            currentModalDate.setMonth(parseInt(e.target.value));
-            loadHistoryTable();
-        });
-    }
-
-    // Year Change
-    if (modalEls.yearSelect) {
-        modalEls.yearSelect.addEventListener("change", (e) => {
-            currentModalDate.setFullYear(parseInt(e.target.value));
-            loadHistoryTable();
-        });
-    }
-
-    // Open Modal Button
-    const viewBtn = document.getElementById("viewAttBtn");
-    if (viewBtn) {
-        viewBtn.addEventListener("click", () => {
-            currentModalDate = new Date(); // Reset to today
-            initDropdowns(); // Re-populate if needed
-            loadHistoryTable();
-            if(modalEls.overlay) modalEls.overlay.classList.add("show");
-        });
-    }
-
-    // Close Modal
-    const closeModal = () => {
-        if(modalEls.overlay) modalEls.overlay.classList.remove("show");
-    };
-    if (modalEls.closeBtn) modalEls.closeBtn.addEventListener("click", closeModal);
-    window.addEventListener("click", (e) => { if (e.target === modalEls.overlay) closeModal(); });
-
-    // Initial Init
-    initDropdowns();
 });

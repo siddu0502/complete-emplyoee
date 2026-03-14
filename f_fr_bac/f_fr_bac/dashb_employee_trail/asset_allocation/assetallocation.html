@@ -39,9 +39,9 @@
     </div>
     
     <!-- Toggle Button -->
-    <button id="sidebarToggle" class="sidebar-toggle">
+    <!-- <button id="sidebarToggle" class="sidebar-toggle">
       <i class="fa-solid fa-chevron-left"></i>
-    </button>
+    </button> -->
   </div>
 
   <div class="sidebar-content">
@@ -117,6 +117,16 @@
         </a>
       </li>
 
+      <!-- help desk -->
+             <li class="menu-item">
+              <a href="../help_desk/help_desk.html" class="menu-link">
+                <div class="link-left">
+                  <i class="fa-solid fa-headset"></i>
+                  <span>Help Desk</span>
+                </div>
+              </a>
+            </li>
+
     </ul>
   </div>
 </aside>
@@ -175,39 +185,60 @@
 
         <!-- 2. PROFILE COMPONENT -->
         <div class="db-widget-wrapper">
-            <!-- Profile Image Button -->
-            <button class="db-profile-trigger-btn" onclick="db_toggleProfile()">
-                <img src="../assets/profiledp.jpeg" alt="User">
-                <span class="db-online-dot"></span>
-            </button>
+    <!-- Profile Image Button (Trigger) -->
+    <button class="db-profile-trigger-btn" onclick="db_toggleProfile()">
+        <!-- Container for Small Avatar (Image or Initials) -->
+        <div id="db-trigger-avatar-box" class="db-avatar-box sm">
+            <img src="" alt="User" id="db-trigger-img" style="display: none;">
+        </div>
+        <span class="db-online-dot"></span>
+    </button>
 
-            <!-- Unique ID for Profile Dropdown -->
-            <div class="db-dropdown-card db-profile-card" id="db-profile-menu">
-                <!-- User Info Header -->
-                <div class="db-profile-header-info">
-                    <div class="db-user-avatar-lg">
-                        <img src="../assets/profiledp.jpeg" alt="User">
-                    </div>
-                    <div class="db-user-info-text">
-                        <h3 id="name"></h3>
-                        <p>Employee ID: <span id="employee_id"></span></p>
-                    </div>
-                </div>
-
-                <!-- Menu Links -->
-                <ul class="db-profile-nav-list">
-                    <li><a href="#"><i class="fa-regular fa-user"></i> My Profile</a></li>
-                    <li><a href="#"><i class="fa-solid fa-gear"></i> Settings</a></li>
-                </ul>
-
-                <!-- Logout Section -->
-                <div class="db-logout-footer">
-                    <button class="db-logout-action-btn" onclick="db_logoutUser()">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
-                    </button>
-                </div>
+    <!-- Dropdown Card -->
+    <div class="db-dropdown-card db-profile-card" id="db-profile-menu">
+        <!-- User Info Header -->
+        <div class="db-profile-header-info">
+            <!-- Container for Large Avatar (Image or Initials) -->
+            <div id="db-header-avatar-box" class="db-user-avatar-lg">
+                <img src="" alt="User" id="db-header-img" style="display: none;">
+            </div>
+            
+            <div class="db-user-info-text">
+                <h3 id="db-user-name">Loading...</h3>
+                <p>Employee ID: <span id="db-employee-id">...</span></p>
             </div>
         </div>
+
+        <!-- Menu Links -->
+        <ul class="db-profile-nav-list">
+            <li><a href="../dashboard/dashboard.html"><i class="fa-regular fa-user"></i> My Profile</a></li>
+        </ul>
+
+        <!-- Logout Section -->
+        <div class="db-logout-footer">
+            <button class="db-logout-action-btn" onclick="db_logoutUser()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Logout Confirmation Modal -->
+<div id="logout-confirm-modal" class="logout-modal-overlay">
+    <div class="logout-modal-card">
+        <div class="logout-icon-box">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </div>
+        <h3>Log Out?</h3>
+        <p>Are you sure you want to end your session? You will need to sign in again to access the dashboard.</p>
+        
+        <div class="logout-modal-actions">
+            <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+            <button class="btn-confirm" onclick="performLogout()">Yes, Log Out</button>
+        </div>
+    </div>
+</div>
+
          </div>
                     
                 </header>
@@ -264,8 +295,8 @@
                             <table class="ast-data-table">
                                 <thead>
                                     <tr>
-                                        <th>Asset Details</th>
-                                        <th>Serial ID</th>
+                                        <th>Asset Type / Model</th> 
+                                        <th>Model / Details</th> 
                                         <th>Date Assigned</th>
                                         <th>Status</th>
                                         <!-- <th>Actions</th> -->
@@ -406,8 +437,8 @@
                           <option value="headset">Headset</option>
 
                         </select>
-                        <label>Asset Description</label>
-                        <textarea id="assetDes" placeholder="Asset Description" required></textarea>
+                        <label>Model / Description</label>
+                            <textarea  id="assetDes" placeholder="e.g. MacBook  M3 or Dell" required></textarea>
                         <label>Location</label>
                         <input type="text" id="assetLocation" required>
                         <div class="popup-buttons">
@@ -434,6 +465,48 @@
             </div>
         </main>
     </div>
+
+    <!-- CHAT WIDGET STRUCTURE -->
+
+<!-- 1. Floating Trigger Button -->
+<button id="chat-trigger-btn" class="chat-trigger" onclick="toggleChat()">
+    <i class="fa-solid fa-comments"></i>
+    <span class="chat-notify-badge">1</span>
+</button>
+
+<!-- 2. Chat Window -->
+<div id="chat-window" class="chat-window-container">
+    
+    <!-- Header -->
+    <div class="chat-header">
+        <div class="chat-header-info">
+            <div class="chat-avatar">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div>
+                <h4>IT & HR Assistant</h4>
+                <span class="chat-status"><span class="status-dot"></span> Online</span>
+            </div>
+        </div>
+        <button class="chat-close-btn" onclick="toggleChat()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <!-- Messages Body -->
+    <div id="chat-body" class="chat-body">
+        <!-- Messages will appear here dynamically -->
+    </div>
+
+    <!-- Input Area -->
+    <div class="chat-footer">
+        <input type="text" id="chat-input" placeholder="Type your message..." onkeypress="handleEnter(event)">
+        <button id="chat-send-btn" onclick="sendMessage()">
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script src="./assetallocation.js"></script>

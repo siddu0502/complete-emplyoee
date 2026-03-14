@@ -131,75 +131,95 @@
                     </div>
 
                     <!-- 1. NOTIFICATION COMPONENT -->
-         <div style="width: auto; display: flex; justify-content: flex-end; align-items: center; gap: 20px;">
-        <div class="db-widget-wrapper">
-            <button class="db-icon-btn db-notif-trigger-btn" onclick="db_toggleNotifications()">
-                <i class="fa-regular fa-bell"></i>
-                <span class="db-notif-badge">3</span>
-            </button>
+                    <div style="width: auto; display: flex; justify-content: flex-end; align-items: center; gap: 20px;">
+                        <div class="db-widget-wrapper">
+                            <button class="db-icon-btn db-notif-trigger-btn" onclick="db_toggleNotifications()">
+                                <i class="fa-regular fa-bell"></i>
+                                <span class="db-notif-badge">3</span>
+                            </button>
 
-            <!-- Unique ID for Notification Dropdown -->
-            <div class="db-dropdown-card db-notif-card" id="db-notification-menu">
-                <div class="db-card-header">Notifications</div>
-                
-                <div class="db-notif-item">
-                    <div class="db-notif-symbol"><i class="fa-solid fa-check"></i></div>
-                    <div class="db-notif-text">
-                        <h4>Leave Approved</h4>
-                        <p>Your leave request was approved.</p>
-                        <span class="db-time-ago">Just now</span>
-                    </div>
-                </div>
+                            <!-- Unique ID for Notification Dropdown -->
+                            <div class="db-dropdown-card db-notif-card" id="db-notification-menu">
+                                <div class="db-card-header">Notifications</div>
 
-                <div class="db-notif-item">
-                    <div class="db-notif-symbol db-symbol-alert">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                    </div>
-                    <div class="db-notif-text">
-                        <h4>Attendance Alert</h4>
-                        <p>You forgot to punch out.</p>
-                        <span class="db-time-ago">2 hours ago</span>
-                    </div>
-                </div>
-            </div>
+                                <div class="db-notif-item">
+                                    <div class="db-notif-symbol"><i class="fa-solid fa-check"></i></div>
+                                    <div class="db-notif-text">
+                                        <h4>Leave Approved</h4>
+                                        <p>Your leave request was approved.</p>
+                                        <span class="db-time-ago">Just now</span>
+                                    </div>
+                                </div>
+
+                                <div class="db-notif-item">
+                                    <div class="db-notif-symbol db-symbol-alert">
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                    </div>
+                                    <div class="db-notif-text">
+                                        <h4>Attendance Alert</h4>
+                                        <p>You forgot to punch out.</p>
+                                        <span class="db-time-ago">2 hours ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. PROFILE COMPONENT -->
+                        <div class="db-widget-wrapper">
+                            <!-- Profile Image Button -->
+                            <button class="db-profile-trigger-btn" onclick="db_toggleProfile()">
+                                 <div id="db-trigger-avatar-box" class="db-avatar-box sm">
+                                    <img src="" alt="User" id="db-trigger-img" style="display: none;">
+                                 </div>
+                                <span class="db-online-dot"></span>
+                            </button>
+
+                            <!-- Unique ID for Profile Dropdown -->
+                            <div class="db-dropdown-card db-profile-card" id="db-profile-menu">
+                                <!-- User Info Header -->
+                                <div class="db-profile-header-info">
+                                   <div id="db-header-avatar-box" class="db-user-avatar-lg">
+                                        <img src="" alt="User" id="db-header-img" style="display: none;">
+                                    </div>
+                                    <div class="db-user-info-text">
+                                        <h3 id="pname"></h3>
+                                        <p>Employee ID: <span id="employee_id"></span></p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Menu Links -->
+                                <ul class="db-profile-nav-list">
+                                    <li><a href="../dashboard/dashboard.html"><i class="fa-regular fa-user"></i> My
+                                            Profile</a></li>
+
+                                </ul>
+
+                                <!-- Logout Section -->
+                                <div class="db-logout-footer">
+                                    <button class="db-logout-action-btn" onclick="db_logoutUser()">
+                                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Custom Logout Confirmation Modal -->
+<div id="logout-confirm-modal" class="logout-modal-overlay">
+    <div class="logout-modal-card">
+        <div class="logout-icon-box">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
         </div>
-
-        <!-- 2. PROFILE COMPONENT -->
-        <div class="db-widget-wrapper">
-            <!-- Profile Image Button -->
-            <button class="db-profile-trigger-btn" onclick="db_toggleProfile()">
-                <img src="../assets/profiledp.jpeg" alt="User">
-                <span class="db-online-dot"></span>
-            </button>
-
-            <!-- Unique ID for Profile Dropdown -->
-            <div class="db-dropdown-card db-profile-card" id="db-profile-menu">
-                <!-- User Info Header -->
-                <div class="db-profile-header-info">
-                    <div class="db-user-avatar-lg">
-                        <img src="../assets/profiledp.jpeg" alt="User">
-                    </div>
-                    <div class="db-user-info-text">
-                        <h3 id="name"></h3>
-                        <p>Employee ID: <span id="employee_id"></span></p>
-                    </div>
-                </div>
-
-                <!-- Menu Links -->
-                <ul class="db-profile-nav-list">
-                    <li><a href="#"><i class="fa-regular fa-user"></i> My Profile</a></li>
-                    <li><a href="#"><i class="fa-solid fa-gear"></i> Settings</a></li>
-                </ul>
-
-                <!-- Logout Section -->
-                <div class="db-logout-footer">
-                    <button class="db-logout-action-btn" onclick="db_logoutUser()">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
-                    </button>
-                </div>
-            </div>
+        <h3>Log Out?</h3>
+        <p>Are you sure you want to end your session? You will need to sign in again to access the dashboard.</p>
+        
+        <div class="logout-modal-actions">
+            <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+            <button class="btn-confirm" onclick="performLogout()">Yes, Log Out</button>
         </div>
-         </div>
+    </div>
+</div>
+
+                    </div>
                 </header>
             </div>
 
@@ -212,7 +232,7 @@
                     <div class="current-date" id="currentDateDisplay">--:-- --, -- --- ----</div>
 
                     <div class="timer-wrapper">
-                       
+
                         <div class="timer-circle">
 
                             <svg width="160" height="160" class="progress-ring">
@@ -282,48 +302,49 @@
             </div>
 
             <!-- 3. MODAL POPUP (Professional Design) -->
-           <div class="att-modal-overlay" id="attModal">
-    <div class="att-modal-box">
-    <div class="att-modal-header">
-        <div class="header-content">
-            <h3>Attendance Records</h3>
-            <span class="header-subtitle">Detailed log of punch-in & punch-out timings</span>
-        </div>
+            <div class="att-modal-overlay" id="attModal">
+                <div class="att-modal-box">
+                    <div class="att-modal-header">
+                        <div class="header-content">
+                            <h3>Attendance Records</h3>
+                            <span class="header-subtitle">Detailed log of punch-in & punch-out timings</span>
+                        </div>
 
-        <!-- DUAL DROPDOWN CONTROLS -->
-        <div class="custom-cal-nav">
-            <!-- Month Dropdown -->
-            <select id="navMonthSelect" class="nav-select month-select"></select>
-            
-            <!-- Year Dropdown -->
-            <select id="navYearSelect" class="nav-select year-select"></select>
-        </div>
+                        <!-- DUAL DROPDOWN CONTROLS -->
+                        <div class="custom-cal-nav">
+                            <!-- Month Dropdown -->
+                            <select id="navMonthSelect" class="nav-select month-select"></select>
 
-        <button class="att-close-btn" id="attCloseBtn">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
-    </div>
+                            <!-- Year Dropdown -->
+                            <select id="navYearSelect" class="nav-select year-select"></select>
+                        </div>
 
-    <div class="att-modal-body">
-        <div class="table-container">
-            <table class="att-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>In Time</th>
-                        <th>Out Time</th>
-                        <th>Edit</th>
-                    </tr>
-                </thead>
-                <tbody id="attTableBody">
-                    <!-- JS injects rows -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-</div>
+                        <button class="att-close-btn" id="attCloseBtn">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <div class="att-modal-body">
+                        <div class="table-container">
+                            <table class="att-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>In Time</th>
+                                        <th>Out Time</th>
+                                        <th>Duration</th>
+                                        <th>Edit</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attTableBody">
+                                    <!-- JS injects rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- breakmanagement section -->
             <div class="bm-main-container">
@@ -426,7 +447,11 @@
                         <div class="bm-card bm-highlight-card">
                             <div class="bm-highlight-content">
                                 <h3>Break Policy</h3>
-                                <p>Lunch break is limited to 45 minutes, and short breaks are limited to 15 minutes each. Employees are expected to return to work within these allowed time limits. If the break duration exceeds the permitted time, the extra time will be added to the employee’s working hours, and their workday will be extended accordingly. Repeated violations may be subject to review by management.</p>
+                                <p>Lunch break is limited to 45 minutes, and short breaks are limited to 15 minutes
+                                    each. Employees are expected to return to work within these allowed time limits. If
+                                    the break duration exceeds the permitted time, the extra time will be added to the
+                                    employee’s working hours, and their workday will be extended accordingly. Repeated
+                                    violations may be subject to review by management.</p>
                             </div>
                         </div>
 
@@ -559,7 +584,7 @@
 
     </main>
     </div>
-    <div class="edit-modal-overlay" id="editModal">
+        <div class="edit-modal-overlay" id="editModal">
         <div class="edit-modal-box">
 
             <h3>Edit Attendance</h3>
@@ -573,24 +598,20 @@
                     <option value="Unpaid">Unpaid</option>
                     <option value="Paid">Paid</option>
                 </select>
- 
+
                 <label>In Time</label>
-                <div class="time-input-wrapper" style="display:flex; align-items:center; gap:4px;">
-                    <input type="time" id="editInTime">
-                    <select id="editInAMPM" class="form-input ampm-select" style="width:60px;">
-                        <option>AM</option>
-                        <option>PM</option>
-                    </select>
+                <div class="time-input-wrapper">
+                    <!-- Just the input, removed the confusing select -->
+                    <input type="time" id="editInTime" class="form-input"> 
                 </div>
 
                 <label>Out Time</label>
-                <div class="time-input-wrapper" style="display:flex; align-items:center; gap:4px;">
-                    <input type="time" id="editOutTime">
-                    <select id="editOutAMPM" class="form-input ampm-select" style="width:60px;">
-                        <option>AM</option>
-                        <option>PM</option>
-                    </select>
+                <div class="time-input-wrapper">
+                    <input type="time" id="editOutTime" class="form-input">
                 </div>
+                
+                <label>Reason for Change</label>
+                <textarea id="editReason" class="form-input" rows="2" placeholder="e.g. Forgot to punch out"></textarea>
             </div>
 
             <div class="edit-actions">
@@ -600,6 +621,49 @@
 
         </div>
     </div>
+              
+
+    <!-- CHAT WIDGET STRUCTURE -->
+
+<!-- 1. Floating Trigger Button -->
+<button id="chat-trigger-btn" class="chat-trigger" onclick="toggleChat()">
+    <i class="fa-solid fa-comments"></i>
+    <span class="chat-notify-badge">1</span>
+</button>
+
+<!-- 2. Chat Window -->
+<div id="chat-window" class="chat-window-container">
+    
+    <!-- Header -->
+    <div class="chat-header">
+        <div class="chat-header-info">
+            <div class="chat-avatar">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div>
+                <h4>IT & HR Assistant</h4>
+                <span class="chat-status"><span class="status-dot"></span> Online</span>
+            </div>
+        </div>
+        <button class="chat-close-btn" onclick="toggleChat()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <!-- Messages Body -->
+    <div id="chat-body" class="chat-body">
+        <!-- Messages will appear here dynamically -->
+    </div>
+
+    <!-- Input Area -->
+    <div class="chat-footer">
+        <input type="text" id="chat-input" placeholder="Type your message..." onkeypress="handleEnter(event)">
+        <button id="chat-send-btn" onclick="sendMessage()">
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
     <script src="../employee_page/employee.js"></script>
     <script src="../dashboard/dashboard.js"></script>
     <script src="./attendance.js"></script>
