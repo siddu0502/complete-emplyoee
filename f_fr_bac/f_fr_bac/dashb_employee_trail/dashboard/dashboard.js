@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
      const emp_id = localStorage.getItem('employee_id')
    
     console.log(emp_id)
-fetch(`http://127.0.0.1:8000/api/employee/dashboard/${emp_id}/`)
+fetch(`http://13.60.70.185:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
             console.log(data)
@@ -164,7 +164,7 @@ fetch(`http://127.0.0.1:8000/api/employee/dashboard/${emp_id}/`)
         city: document.getElementById('input_city').value
     };
 
-    fetch(`http://127.0.0.1:8000/api/update-employee/${emp_id}/`, {
+    fetch(`http://13.60.70.185:8000/api/update-employee/${emp_id}/`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileData)
@@ -235,7 +235,7 @@ fetch(`http://127.0.0.1:8000/api/employee/dashboard/${emp_id}/`)
                 gender: document.getElementById('input_other_gender').value,
                 dob: document.getElementById('input_other_dob').value,
             }
-             fetch(`http://127.0.0.1:8000/api/update-employee/${emp_id}/`, {
+             fetch(`http://13.60.70.185:8000/api/update-employee/${emp_id}/`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileData)
@@ -370,7 +370,7 @@ document.addEventListener("DOMContentLoaded", function () {
 //         city: document.getElementById('input_city').value
 //     };
 
-//     fetch(`http://127.0.0.1:8000/api/update-employee/${emp_id}/`, {
+//     fetch(`http://13.60.70.185:8000/api/update-employee/${emp_id}/`, {
 //         method: "PATCH",
 //         headers: { "Content-Type": "application/json" },
 //         body: JSON.stringify(profileData)
@@ -440,5 +440,101 @@ window.onclick = function(event) {
     if (!event.target.closest('.db-widget-wrapper')) {
         db_closeNotifications();
         db_closeProfile();
+    }
+}
+
+
+//small profile 
+document.addEventListener("DOMContentLoaded", () => {
+    // --- 1. SIMULATED USER DATA ---
+    // Change 'profilePic' to a URL string to test the image version.
+    // Leave as null or empty string "" to test the initials version.
+    const currentUser = {
+        firstName: "Dhamodhar",
+        lastName: "Kamini",
+        empId: "EMP-2024-055",
+        profilePic: "" // Try changing this to: "https://ui-avatars.com/api/?name=John+Doe"
+    };
+
+    // --- 2. INITIALIZE PROFILE ---
+    loadUserProfile(currentUser);
+});
+
+/**
+ * Populates the profile section with data.
+ * Handles Image vs Initials logic.
+ */
+function loadUserProfile(user) {
+    // 1. Set Text Data
+    document.getElementById("db-user-name").textContent = `${user.firstName} ${user.lastName}`;
+    document.getElementById("db-employee-id").textContent = user.empId;
+
+    // 2. Handle Avatar Logic (For both Trigger and Header)
+    updateAvatar("db-trigger-avatar-box", "db-trigger-img", user);
+    updateAvatar("db-header-avatar-box", "db-header-img", user);
+}
+
+/**
+ * Helper function to render image or initials into a specific container
+ */
+function updateAvatar(containerId, imgId, user) {
+    const container = document.getElementById(containerId);
+    const imgElement = document.getElementById(imgId);
+
+    if (user.profilePic && user.profilePic.trim() !== "") {
+        // CASE A: User has a photo
+        imgElement.src = user.profilePic;
+        imgElement.style.display = "block";
+        
+        // Remove any existing initials div if it exists
+        const existingInitials = container.querySelector('.avatar-initials');
+        if (existingInitials) existingInitials.remove();
+
+    } else {
+        // CASE B: No photo -> Generate Initials
+        imgElement.style.display = "none"; // Hide the broken/empty image tag
+
+        // Get Initials (First char of First Name + First char of Last Name)
+        const fInitial = user.firstName ? user.firstName.charAt(0) : "";
+        const lInitial = user.lastName ? user.lastName.charAt(0) : "";
+        const initials = (fInitial + lInitial).toUpperCase();
+
+        // Check if initials element already exists to avoid duplicates
+        let initialsDiv = container.querySelector('.avatar-initials');
+        
+        if (!initialsDiv) {
+            initialsDiv = document.createElement("div");
+            initialsDiv.className = "avatar-initials";
+            container.appendChild(initialsDiv);
+        }
+        
+        initialsDiv.textContent = initials;
+    }
+}
+
+// --- 3. TOGGLE DROPDOWN FUNCTION ---
+function db_toggleProfile() {
+    const menu = document.getElementById("db-profile-menu");
+    menu.classList.toggle("show");
+}
+
+// Close dropdown if clicking outside
+window.addEventListener("click", function(e) {
+    const menu = document.getElementById("db-profile-menu");
+    const trigger = document.querySelector(".db-profile-trigger-btn");
+    
+    if (menu.classList.contains("show")) {
+        if (!menu.contains(e.target) && !trigger.contains(e.target)) {
+            menu.classList.remove("show");
+        }
+    }
+});
+
+// --- 4. LOGOUT FUNCTION ---
+function db_logoutUser() {
+    // Add your logout logic here (clear localStorage, redirect, etc.)
+    if(confirm("Are you sure you want to logout?")) {
+        console.log("Logging out...");
+        // window.location.href = "login.html";
     }
 }

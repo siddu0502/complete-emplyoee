@@ -86,7 +86,7 @@
 
 //     //     try {
 
-//     //         const response = await fetch(`http://127.0.0.1:8000/api/employee-payslips/${empId}/`);
+//     //         const response = await fetch(`http://13.60.70.185:8000/api/employee-payslips/${empId}/`);
 
 //     //         if (!response.ok) {
 //     //             throw new Error(HTTP `${response.status}`);
@@ -129,7 +129,7 @@
 //     // }
 
 //     // fetchPayslips();
-//     fetch(`http://127.0.0.1:8000/api/employee-payslips/${empId}/`)
+//     fetch(`http://13.60.70.185:8000/api/employee-payslips/${empId}/`)
 //     .then(res => res.json())
 //     .then(data => {
 //         payslipTableBody.innerHTML = ""
@@ -158,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const empId = localStorage.getItem('employee_id');
     
-    fetch(`http://127.0.0.1:8000/api/employee/dashboard/${empId}/`)
+    fetch(`http://13.60.70.185:8000/api/employee/dashboard/${empId}/`)
         .then(res => res.json())
         .then(data => {
             document.getElementById("name").innerText = data.name;
@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    fetch(`http://127.0.0.1:8000/api/employee-payslips/${empId}/`)
+    fetch(`http://13.60.70.185:8000/api/employee-payslips/${empId}/`)
         .then(res => res.json())
         .then(data => {
             payslipTableBody.innerHTML = "";

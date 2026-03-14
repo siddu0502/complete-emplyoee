@@ -314,6 +314,7 @@
                                         <th>Status</th>
                                         <th>In Time</th>
                                         <th>Out Time</th>
+                                        <th>Duration</th>
                                         <th>Edit</th>
                                     </tr>
                                 </thead>
@@ -442,7 +443,8 @@
                 <div class="bm-card bm-history-card">
                     <div class="bm-card-header">
                         <span class="bm-card-title">Today's Activity Log</span>
-                        
+                        <button class="bm-btn bm-btn-white bm-btn-sm">Filter <i
+                                class="fa-solid fa-chevron-down"></i></button>
                     </div>
                     <!-- Scrollable Table Container -->
                     <div class="bm-table-responsive">
@@ -563,7 +565,7 @@
 
     </main>
     </div>
-    <div class="edit-modal-overlay" id="editModal">
+        <div class="edit-modal-overlay" id="editModal">
         <div class="edit-modal-box">
 
             <h3>Edit Attendance</h3>
@@ -579,22 +581,16 @@
                 </select>
 
                 <label>In Time</label>
-                <div class="time-input-wrapper" style="display:flex; align-items:center; gap:4px;">
-                    <input type="time" id="editInTime">
-                    <select id="editInAMPM" class="form-input ampm-select" style="width:60px;">
-                        <option>AM</option>
-                        <option>PM</option>
-                    </select>
+                <div class="time-input-wrapper">
+                    <!-- Just the input, removed the confusing select -->
+                    <input type="time" id="editInTime" class="form-input"> 
                 </div>
 
                 <label>Out Time</label>
-                <div class="time-input-wrapper" style="display:flex; align-items:center; gap:4px;">
-                    <input type="time" id="editOutTime">
-                    <select id="editOutAMPM" class="form-input ampm-select" style="width:60px;">
-                        <option>AM</option>
-                        <option>PM</option>
-                    </select>
+                <div class="time-input-wrapper">
+                    <input type="time" id="editOutTime" class="form-input">
                 </div>
+                
                 <label>Reason for Change</label>
                 <textarea id="editReason" class="form-input" rows="2" placeholder="e.g. Forgot to punch out"></textarea>
             </div>
@@ -606,6 +602,7 @@
 
         </div>
     </div>
+              
     <script src="../employee_page/employee.js"></script>
     <script src="../dashboard/dashboard.js"></script>
     <script src="./attendance.js"></script>

@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const emp_id = localStorage.getItem('employee_id')
  console.log(emp_id)
-    fetch(`http://127.0.0.1:8000/api/employee/dashboard/${emp_id}/`)
+    fetch(`http://13.60.70.185:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
           console.log(data)
