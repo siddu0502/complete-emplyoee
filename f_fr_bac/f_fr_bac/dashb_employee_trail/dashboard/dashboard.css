@@ -1190,54 +1190,46 @@ opacity: 0.2;
 
 
 /* footer section */
-/* --- Footer Styling --- */
 .db-footer {
+    display: flex;                
+    justify-content: space-between; 
+    align-items: center;          
+    width: 100%; 
     
-    background-color: var(--white, #ffffff); /* Use your white variable */
-    border-top: 1px solid #e2e8f0; /* Subtle border line */
-    padding: 20px 30px;
-    margin-top: auto; /* Pushes footer to bottom if content is short */
+    /* CHANGE THIS LINE */
+    padding: 20px 30px; /* Adds 30px padding to Left and Right */
+    
+    border-top: 1px solid #e6e6e6; 
+    margin-top: 30px;
+    background-color: transparent; 
+    
+    /* Add this to ensure it sits on top of backgrounds but behind modals */
+    position: relative; 
+    z-index: 1; 
 }
 
-.footer-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 100%;
-}
-
-/* Text Styles */
-.db-footer p {
+/* Text Styling */
+.footer-left, 
+.footer-right {
     font-size: 13px;
-    color: #64748b; /* Muted Grey to match image */
+    color: #888; /* Grey text */
     font-weight: 500;
-    margin: 0;
-    font-family: 'Inter', sans-serif;
 }
 
-/* Brand Highlight (Orange Theme) */
-.brand-text {
-    color: #111;
-    font-weight: 600;
-}
-
+/* Orange Brand Color */
+.brand-text, 
 .brand-link {
-    color: #ff6b00; /* Your Primary Orange */
-    text-decoration: none;
+    color: #ff6b00; /* Your theme orange */
     font-weight: 600;
-    transition: color 0.3s ease;
+    text-decoration: none;
 }
 
-.brand-link:hover {
-    color: #e65e00; /* Darker Orange on hover */
-    text-decoration: underline;
-}
-
-/* --- Responsive Design (Mobile) --- */
+/* Mobile Responsiveness */
 @media (max-width: 768px) {
-    .footer-content {
-        flex-direction: column; /* Stack vertically */
-        gap: 10px; /* Space between lines */
+    .db-footer {
+        flex-direction: column; /* Stack on top of each other on mobile */
+        gap: 10px;
         text-align: center;
+        justify-content: center;
     }
 }
