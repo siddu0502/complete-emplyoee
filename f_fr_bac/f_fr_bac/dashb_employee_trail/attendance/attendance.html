@@ -603,6 +603,48 @@
         </div>
     </div>
               
+
+    <!-- CHAT WIDGET STRUCTURE -->
+
+<!-- 1. Floating Trigger Button -->
+<button id="chat-trigger-btn" class="chat-trigger" onclick="toggleChat()">
+    <i class="fa-solid fa-comments"></i>
+    <span class="chat-notify-badge">1</span>
+</button>
+
+<!-- 2. Chat Window -->
+<div id="chat-window" class="chat-window-container">
+    
+    <!-- Header -->
+    <div class="chat-header">
+        <div class="chat-header-info">
+            <div class="chat-avatar">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div>
+                <h4>IT & HR Assistant</h4>
+                <span class="chat-status"><span class="status-dot"></span> Online</span>
+            </div>
+        </div>
+        <button class="chat-close-btn" onclick="toggleChat()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <!-- Messages Body -->
+    <div id="chat-body" class="chat-body">
+        <!-- Messages will appear here dynamically -->
+    </div>
+
+    <!-- Input Area -->
+    <div class="chat-footer">
+        <input type="text" id="chat-input" placeholder="Type your message..." onkeypress="handleEnter(event)">
+        <button id="chat-send-btn" onclick="sendMessage()">
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
     <script src="../employee_page/employee.js"></script>
     <script src="../dashboard/dashboard.js"></script>
     <script src="./attendance.js"></script>

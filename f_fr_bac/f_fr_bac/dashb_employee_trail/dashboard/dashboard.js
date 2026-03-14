@@ -538,3 +538,163 @@ function db_logoutUser() {
         // window.location.href = "login.html";
     }
 }
+
+
+
+//chat box section
+/* =========================================
+   SMART RULE-BASED CHATBOT (NO API)
+   ========================================= */
+
+// 1. Bot Knowledge Base
+// We use arrays of keywords to catch different ways of asking the same thing
+const botKnowledge = [
+    {
+        keywords: ["hello", "hi", "hey", "greetings", "morning", "afternoon"],
+        response: "Hello! 👋 I am the company AI assistant. How can I help you today?"
+    },
+    {
+        keywords: ["time", "timing", "hour", "clock", "shift", "schedule", "open", "close"],
+        response: "General office hours are <strong>10:00 AM to 7:00 PM</strong>, Monday to Friday."
+    },
+    {
+        keywords: ["leave", "sick", "casual", "vacation", "holiday", "off"],
+        // We add a negative check logic inside the function to distinguish 'holiday' vs 'leave'
+        response: "You currently have <strong>12 Casual Leaves</strong> and <strong>5 Sick Leaves</strong> remaining. <br><a href='#' style='color:#ff6b00;'>Apply here</a>"
+    },
+    {
+        keywords: ["pay", "salary", "slip", "money", "bonus", "account", "bank"],
+        response: "Payslips are generated on the <strong>15th of every month</strong>. You can download them from the Payroll section."
+    },
+    {
+        keywords: ["pass", "reset", "login", "auth", "access", "account"],
+        response: "To reset your password, go to <strong>Settings > Security</strong> in the top right menu."
+    },
+    {
+        keywords: ["holiday", "festival", "calendar"],
+        response: "The next upcoming holiday is <strong>Ugadi</strong> on March 19th."
+    }
+];
+
+const defaultResponse = "I'm not sure about that. Would you like to connect with a human? <br><button class='chat-inline-btn' onclick='connectToHuman()'>Chat with HR</button>";
+
+// 2. MAIN LOGIC: Smart Matching
+function getBotResponse(userText) {
+    userText = userText.toLowerCase();
+    
+    // Loop through all topics
+    for (let topic of botKnowledge) {
+        // Check if the user text contains ANY of the keywords for this topic
+        // We use .some() to check if at least one keyword exists in the sentence
+        const match = topic.keywords.some(word => userText.includes(word));
+        
+        if (match) {
+            // SPECIAL HANDLING: Distinguish "Holiday" from "Leave"
+            // If user says "holiday", we prefer the holiday response over the leave response
+            if (topic.response.includes("Casual Leaves") && (userText.includes("holiday") || userText.includes("festival"))) {
+                continue; // Skip the 'leave' logic, let it find the 'holiday' logic later
+            }
+            return topic.response;
+        }
+    }
+
+    return defaultResponse;
+}
+
+/* --- STANDARD UI FUNCTIONS (Same as before) --- */
+
+let isChatInitialized = false;
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (!isChatInitialized) {
+        setTimeout(() => {
+            addMessageToChat("Hello! 👋 I can help with:<br><br>" +
+                "<span class='chip' onclick='quickAsk(\"leave\")'>Leave Balance</span>" +
+                "<span class='chip' onclick='quickAsk(\"time\")'>Office Hours</span>" +
+                "<span class='chip' onclick='quickAsk(\"pay\")'>Payroll</span>", 
+                'received');
+            isChatInitialized = true;
+        }, 1000);
+    }
+});
+
+function toggleChat() {
+    const chatWindow = document.getElementById('chat-window');
+    const badge = document.querySelector('.chat-notify-badge');
+    chatWindow.classList.toggle('active');
+    if (chatWindow.classList.contains('active')) {
+        badge.style.display = 'none';
+        setTimeout(() => document.getElementById('chat-input').focus(), 300);
+    }
+}
+
+function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const userText = input.value.trim();
+    if (userText === "") return;
+
+    addMessageToChat(userText, 'sent');
+    input.value = "";
+    showTypingIndicator();
+    
+    setTimeout(() => {
+        removeTypingIndicator();
+        const reply = getBotResponse(userText);
+        addMessageToChat(reply, 'received');
+    }, 800);
+}
+
+function quickAsk(keyword) {
+    // Determine label based on keyword
+    let label = keyword;
+    if(keyword === 'leave') label = "Leave Balance";
+    if(keyword === 'time') label = "Office Hours";
+    if(keyword === 'pay') label = "Payroll Info";
+
+    addMessageToChat(label, 'sent');
+    showTypingIndicator();
+    setTimeout(() => {
+        const reply = getBotResponse(keyword); 
+        addMessageToChat(reply, 'received');
+        removeTypingIndicator();
+    }, 800);
+}
+
+function connectToHuman() {
+    addMessageToChat("Connecting to HR...", 'sent');
+    showTypingIndicator();
+    setTimeout(() => {
+        removeTypingIndicator();
+        addMessageToChat("An HR representative has been notified.", 'received');
+    }, 2000);
+}
+
+function addMessageToChat(htmlContent, type) {
+    const chatBody = document.getElementById('chat-body');
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${type}`;
+    msgDiv.innerHTML = `<p>${htmlContent}</p><span class="msg-time">${time}</span>`;
+    chatBody.appendChild(msgDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function handleEnter(event) {
+    if (event.key === 'Enter') sendMessage();
+}
+
+function showTypingIndicator() {
+    const chatBody = document.getElementById('chat-body');
+    removeTypingIndicator();
+    const typingDiv = document.createElement('div');
+    typingDiv.id = 'typing-indicator';
+    typingDiv.className = 'message received typing';
+    typingDiv.innerHTML = `<span></span><span></span><span></span>`;
+    chatBody.appendChild(typingDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function removeTypingIndicator() {
+    const el = document.getElementById('typing-indicator');
+    if (el) el.remove();
+}
