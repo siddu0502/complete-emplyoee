@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     
     // --- 1. WhatsApp Dynamic Link ---
-    const waNumber = "919876543210"; // Replace with company number
+    const waNumber = "9491209900"; // Replace with company number
     const waMessage = "Hello IT Team, I need help with...";
     const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`;
     
