@@ -18,17 +18,17 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(data => {
             console.log("Employee Data:", data);
 
-            // A. UPDATE HEADER & SIDEBAR (Exists on all pages)
+            // A. UPDATE HEADER & SIDEBAR
             if (document.getElementById("name")) document.getElementById("name").innerText = data.name;
             if (document.getElementById("role")) document.getElementById("role").innerText = data.role;
 
-            // B. UPDATE DASHBOARD MAIN PROFILE (Only updates if elements exist)
+            // B. UPDATE DASHBOARD MAIN PROFILE
             if (document.getElementById("display_name")) document.getElementById("display_name").innerText = data.name;
             if (document.getElementById("email")) document.getElementById("email").innerText = data.email;
             if (document.getElementById("display_role")) document.getElementById("display_role").innerText = data.role;
             if (document.getElementById("display_salary")) document.getElementById("display_salary").innerText = data.salary;
 
-            // C. UPDATE DASHBOARD OTHER DETAILS (Only updates if elements exist)
+            // C. UPDATE DASHBOARD OTHER DETAILS
             if (data.other_details && data.other_details.length > 0) {
                 const od = data.other_details[0];
                 if (document.getElementById("display_dob")) document.getElementById("display_dob").innerText = od.dob;
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (document.getElementById("display_other_dob")) document.getElementById("display_other_dob").innerText = od.dob;
             }
 
-            // D. UPDATE DASHBOARD BANK DETAILS (Only updates if elements exist)
+            // D. UPDATE DASHBOARD BANK DETAILS
             if (data.bank_details && data.bank_details.length > 0) {
                 const bd = data.bank_details[0];
                 if (document.getElementById("bankname")) document.getElementById("bankname").innerText = bd.bank_name;
@@ -52,15 +52,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (document.getElementById("branch")) document.getElementById("branch").innerText = bd.branch;
             }
 
-            // E. PASS DATA TO HEADER AVATAR DROPDOWN (Exists on all pages)
+            // E. PASS DATA TO HEADER AVATAR DROPDOWN
             let fName = data.name || "Employee";
             let lName = "";
-            if(data.name && data.name.includes(" ")) {
+            if (data.name && data.name.includes(" ")) {
                 let parts = data.name.split(" ");
                 fName = parts[0];
                 lName = parts.slice(1).join(" ");
             }
-            
+
             loadUserProfile({
                 firstName: fName,
                 lastName: lName,
@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         alert("Profile updated successfully!");
                         closeProfileModalFunc();
                         showToast();
-                        window.location.reload(); 
+                        window.location.reload();
                     } else {
                         alert("Update failed, check console.");
                         console.error(data);
@@ -178,13 +178,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const dispOtherDob = document.getElementById("display_other_dob");
 
     const inputOtherPhone = document.getElementById("input_other_phone");
-    const inputOtherGender = document.getElementById("input_other_gender"); 
+    const inputOtherGender = document.getElementById("input_other_gender");
     const inputOtherDob = document.getElementById("input_other_dob");
 
     if (otherOpenBtn) {
         otherOpenBtn.addEventListener("click", () => {
             if (inputOtherPhone && dispOtherPhone) inputOtherPhone.value = dispOtherPhone.innerText;
-            if (inputOtherGender && dispOtherGender) inputOtherGender.value = dispOtherGender.innerText; 
+            if (inputOtherGender && dispOtherGender) inputOtherGender.value = dispOtherGender.innerText;
             if (inputOtherDob && dispOtherDob) inputOtherDob.value = dispOtherDob.innerText;
             if (otherModal) otherModal.classList.add("active");
         });
@@ -242,8 +242,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const cancelPhotoBtn = document.getElementById("cancelPhotoBtn");
     const savePhotoBtn = document.getElementById("savePhotoBtn");
 
-    const mainImg = document.getElementById("mainProfileImage"); 
-    const previewImg = document.getElementById("modalImagePreview"); 
+    const mainImg = document.getElementById("mainProfileImage");
+    const previewImg = document.getElementById("modalImagePreview");
     const fileInput = document.getElementById("newPhotoInput");
     const fileNameDisplay = document.getElementById("fileNameDisplay");
     const toast = document.getElementById("successToast");
@@ -356,50 +356,6 @@ function db_toggleProfile() {
     const profileBtn = document.querySelector('.db-profile-trigger-btn');
     if (!profileDropdown || !profileBtn) return;
 
-<<<<<<< Updated upstream
-// --- 4. LOGOUT FUNCTION ---
-// --- 1. Trigger the Modal (Replaces the old confirm alert) ---
-function db_logoutUser() {
-    // Hide the profile dropdown first (optional, for cleaner UI)
-    const menu = document.getElementById("db-profile-menu");
-    if (menu) menu.classList.remove("show");
-
-    // Show the custom modal
-    const modal = document.getElementById("logout-confirm-modal");
-    modal.classList.add("show");
-}
-
-// --- 2. Close Modal (Cancel Action) ---
-function closeLogoutModal() {
-    const modal = document.getElementById("logout-confirm-modal");
-    modal.classList.remove("show");
-}
-
-// --- 3. Perform Actual Logout (Yes Action) ---
-function performLogout() {
-    const btn = document.querySelector(".btn-confirm");
-    
-    // UI Feedback (Loading state)
-    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Logging out...';
-    btn.style.opacity = "0.8";
-
-    // Simulate short delay for smooth UX
-    setTimeout(() => {
-        // 1. Clear Data
-        localStorage.clear(); 
-        sessionStorage.clear();
-
-        // 2. Redirect to Login
-        window.location.href = "../employee_login/emp_login.html"; // Adjust path as needed
-    }, 800);
-}
-
-// Close modal if clicking outside the card
-window.addEventListener("click", function(e) {
-    const modal = document.getElementById("logout-confirm-modal");
-    if (e.target === modal) {
-        closeLogoutModal();
-=======
     db_closeNotifications();
     profileDropdown.classList.toggle('db-show-menu');
     profileBtn.classList.toggle('db-active-state');
@@ -432,21 +388,17 @@ function db_logoutUser() {
     if (confirm("Are you sure you want to logout?")) {
         // Clear session safely
         localStorage.removeItem('employee_id');
+        localStorage.removeItem('profileImage'); // Optional: Clear cached image
         // Redirect
-        window.location.href = '../employee_login/emp_login.html'; 
->>>>>>> Stashed changes
+        window.location.href = '../employee_login/emp_login.html';
     }
-});
+}
 
-
-
-//chat box section
-/* =========================================
-   SMART RULE-BASED CHATBOT (NO API)
-   ========================================= */
+// =========================================
+// 9. SMART RULE-BASED CHATBOT
+// =========================================
 
 // 1. Bot Knowledge Base
-// We use arrays of keywords to catch different ways of asking the same thing
 const botKnowledge = [
     {
         keywords: ["hello", "hi", "hey", "greetings", "morning", "afternoon"],
@@ -459,7 +411,7 @@ const botKnowledge = [
     {
         keywords: ["leave", "sick", "casual", "vacation", "holiday", "off"],
         // We add a negative check logic inside the function to distinguish 'holiday' vs 'leave'
-        response: "You currently have <strong>12 Casual Leaves</strong> and <strong>5 Sick Leaves</strong> remaining. <br><a href='#' style='color:#ff6b00;'>Apply here</a>"
+        response: "You currently have <strong>12 Casual Leaves</strong> and <strong>5 Sick Leaves</strong> remaining. <br><a href='../apply_leave/leave.html' style='color:#ff6b00;'>Apply here</a>"
     },
     {
         keywords: ["pay", "salary", "slip", "money", "bonus", "account", "bank"],
@@ -480,37 +432,33 @@ const defaultResponse = "I'm not sure about that. Would you like to connect with
 // 2. MAIN LOGIC: Smart Matching
 function getBotResponse(userText) {
     userText = userText.toLowerCase();
-    
+
     // Loop through all topics
     for (let topic of botKnowledge) {
-        // Check if the user text contains ANY of the keywords for this topic
-        // We use .some() to check if at least one keyword exists in the sentence
         const match = topic.keywords.some(word => userText.includes(word));
-        
+
         if (match) {
             // SPECIAL HANDLING: Distinguish "Holiday" from "Leave"
-            // If user says "holiday", we prefer the holiday response over the leave response
             if (topic.response.includes("Casual Leaves") && (userText.includes("holiday") || userText.includes("festival"))) {
-                continue; // Skip the 'leave' logic, let it find the 'holiday' logic later
+                continue; 
             }
             return topic.response;
         }
     }
-
     return defaultResponse;
 }
 
-/* --- STANDARD UI FUNCTIONS (Same as before) --- */
+/* --- STANDARD UI FUNCTIONS --- */
 
 let isChatInitialized = false;
 
 document.addEventListener("DOMContentLoaded", () => {
-    if (!isChatInitialized) {
+    if (!isChatInitialized && document.getElementById("chat-window")) {
         setTimeout(() => {
             addMessageToChat("Hello! 👋 I can help with:<br><br>" +
                 "<span class='chip' onclick='quickAsk(\"leave\")'>Leave Balance</span>" +
                 "<span class='chip' onclick='quickAsk(\"time\")'>Office Hours</span>" +
-                "<span class='chip' onclick='quickAsk(\"pay\")'>Payroll</span>", 
+                "<span class='chip' onclick='quickAsk(\"pay\")'>Payroll</span>",
                 'received');
             isChatInitialized = true;
         }, 1000);
@@ -520,22 +468,26 @@ document.addEventListener("DOMContentLoaded", () => {
 function toggleChat() {
     const chatWindow = document.getElementById('chat-window');
     const badge = document.querySelector('.chat-notify-badge');
-    chatWindow.classList.toggle('active');
-    if (chatWindow.classList.contains('active')) {
-        badge.style.display = 'none';
-        setTimeout(() => document.getElementById('chat-input').focus(), 300);
+    if(chatWindow) chatWindow.classList.toggle('active');
+    
+    if (chatWindow && chatWindow.classList.contains('active')) {
+        if(badge) badge.style.display = 'none';
+        setTimeout(() => {
+           if(document.getElementById('chat-input')) document.getElementById('chat-input').focus();
+        }, 300);
     }
 }
 
 function sendMessage() {
     const input = document.getElementById('chat-input');
+    if(!input) return;
     const userText = input.value.trim();
     if (userText === "") return;
 
     addMessageToChat(userText, 'sent');
     input.value = "";
     showTypingIndicator();
-    
+
     setTimeout(() => {
         removeTypingIndicator();
         const reply = getBotResponse(userText);
@@ -544,16 +496,15 @@ function sendMessage() {
 }
 
 function quickAsk(keyword) {
-    // Determine label based on keyword
     let label = keyword;
-    if(keyword === 'leave') label = "Leave Balance";
-    if(keyword === 'time') label = "Office Hours";
-    if(keyword === 'pay') label = "Payroll Info";
+    if (keyword === 'leave') label = "Leave Balance";
+    if (keyword === 'time') label = "Office Hours";
+    if (keyword === 'pay') label = "Payroll Info";
 
     addMessageToChat(label, 'sent');
     showTypingIndicator();
     setTimeout(() => {
-        const reply = getBotResponse(keyword); 
+        const reply = getBotResponse(keyword);
         addMessageToChat(reply, 'received');
         removeTypingIndicator();
     }, 800);
@@ -570,6 +521,7 @@ function connectToHuman() {
 
 function addMessageToChat(htmlContent, type) {
     const chatBody = document.getElementById('chat-body');
+    if(!chatBody) return;
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const msgDiv = document.createElement('div');
     msgDiv.className = `message ${type}`;
@@ -584,6 +536,7 @@ function handleEnter(event) {
 
 function showTypingIndicator() {
     const chatBody = document.getElementById('chat-body');
+    if(!chatBody) return;
     removeTypingIndicator();
     const typingDiv = document.createElement('div');
     typingDiv.id = 'typing-indicator';

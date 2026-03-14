@@ -222,47 +222,42 @@ const successWishModal = document.getElementById("successWishModal");
 const successNameDisplay = document.getElementById("successName");
 
 // Open Wish Modal
-// window.openWishModal = function(passedName, passedId) {
+window.openWishModal = function(passedName, passedId) {
     
-//     // Safety Check: If clicked from slider but there are no birthdays today
-//     if (!passedName && !hasActiveBirthday) {
-//         // Do nothing or alert user
-//         return; 
-//     }
+    // Safety Check: If clicked from slider but there are no birthdays today
+    if (!passedName && !hasActiveBirthday) {
+        // Do nothing or alert user
+        return; 
+    }
 
-//     let finalName = "your colleague";
-//     let finalId = null;
+    let finalName = "your colleague";
+    let finalId = null;
 
-//     // Case 1: Clicked from the List View (Name and ID passed directly)
-//     if (passedName && passedId) {
-//         finalName = passedName;
-//         finalId = passedId;
-//     } 
-//     // Case 2: Clicked "Send Wishes" under the Slider
-//     else {
-//         const activeSlide = document.querySelector('.swiper-slide-active');
-//         if (activeSlide) {
-//             finalName = activeSlide.dataset.name;
-//             finalId = activeSlide.dataset.id;
+    // Case 1: Clicked from the List View (Name and ID passed directly)
+    if (passedName && passedId) {
+        finalName = passedName;
+        finalId = passedId;
+    } 
+    // Case 2: Clicked "Send Wishes" under the Slider
+    else {
+        const activeSlide = document.querySelector('.swiper-slide-active');
+        if (activeSlide) {
+            finalName = activeSlide.dataset.name;
+            finalId = activeSlide.dataset.id;
             
-//             // If slider is somehow undefined (e.g. no data-id), abort
-//             if(!finalName || !finalId) return;
-//         }
-//     }
+            // If slider is somehow undefined (e.g. no data-id), abort
+            if(!finalName || !finalId) return;
+        }
+    }
 
-//     // Set Global Receiver ID for sending later
-//     currentReceiverId = finalId;
+    // Set Global Receiver ID for sending later
+    currentReceiverId = finalId;
 
-//     if (wishTargetName) wishTargetName.innerText = finalName;
-//     if (wishMessage) wishMessage.value = ""; // Clear text
+    if (wishTargetName) wishTargetName.innerText = finalName;
+    if (wishMessage) wishMessage.value = ""; // Clear text
     
-//     if (wishModal) wishModal.classList.add("active");
-// };
-
-function openWishModal(phone,name){
-  const url =`whatsapp://send?phone=${phone}?text=${encodeURIComponent('happy birthday')}`;
-  window.open(url,'_blank')
-}
+    if (wishModal) wishModal.classList.add("active");
+};
 
 window.closeWishModal = function() {
     if (wishModal) wishModal.classList.remove("active");
