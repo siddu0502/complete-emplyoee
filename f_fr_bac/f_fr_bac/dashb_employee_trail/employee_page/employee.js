@@ -1,111 +1,289 @@
-// --- GLOBAL VARIABLES TO STORE DATA ---
-let allFetchedBirthdays = []; // Stores UPCOMING data for "View All"
-let currentReceiverId = null; // Stores the ID of the person we are wishing
-let hasActiveBirthday = false; // Flag to check if there is a birthday today
+document.addEventListener("DOMContentLoaded", function () {
 
-function openImageUpload() {
-  const fileInput = document.getElementById("imageUpload");
-  if (fileInput) {
-    fileInput.click();
-  }
-}
+    // ==========================================
+    // --- 1. DUMMY DATA (Reference from Admin) ---
+    // ==========================================
+    const birthdays = [
+        { 
+            id: 1, 
+            name: "Dhamodhar", 
+            role: "IOS Developer", 
+            date: "Today, 24 Oct", 
+            phone: "918790997602", // Add Country Code (91)
+            img: "../assets/profiledp.jpeg" 
+        },
+        { 
+            id: 2, 
+            name: "Saleem", 
+            role: "UI Designer", 
+            date: "Today, 25 Oct", 
+            phone: "917075653250", 
+            img: "../assets/profiledp.jpeg" 
+        },
+        { 
+            id: 3, 
+            name: "Balaji", 
+            role: "Product Manager", 
+            date: "26 Oct", 
+            phone: "918309930827", 
+            img: "../assets/profiledp.jpeg" 
+        },
+        { 
+            id: 4, 
+            name: "Manikanta", 
+            role: "QA Engineer", 
+            date: "28 Oct", 
+            phone: "917036084043", 
+            img: "../assets/profiledp.jpeg" 
+        }
+    ];
 
-document.addEventListener("DOMContentLoaded", async function () {
+    // Global State
+    let currentTargetPhone = ""; 
+    let birthdaySwiper = null;
 
-  try {
-    const res = await fetch("http://13.51.167.95:8000/api/birthdays/");
-    const data = await res.json();
-
+    // Elements
     const wrapper = document.getElementById("birthdayWrapper");
-    const wishBtn = document.querySelector('.wish-btn'); // Get the Send Wish button
+    const wishBtn = document.getElementById('sendWishBtn');
+
+    // ==========================================
+    // --- 2. INITIALIZE SWIPER & RENDER SLIDES ---
+    // ==========================================
+    function initBirthdaySlider() {
+        if (!wrapper) return;
+        wrapper.innerHTML = ""; // Clear existing
+
+        if (birthdays.length === 0) {
+            // No Birthdays State
+            wrapper.innerHTML = `
+                <div class="swiper-slide">
+                    <div class="birthday-profile">
+                        <img src="../assets/profiledp.jpeg" style="filter: grayscale(100%); opacity: 0.5;">
+                        <h3>No Birthdays Today</h3>
+                        <p>Check "View All" list</p>
+                    </div>
+                </div>`;
+            if (wishBtn) {
+                wishBtn.disabled = true;
+                wishBtn.style.opacity = "0.5";
+                wishBtn.style.cursor = "not-allowed";
+            }
+            return;
+        }
+
+        // Render Slides
+        birthdays.forEach(person => {
+            const slide = document.createElement("div");
+            slide.className = "swiper-slide";
+            // Store data attributes for easy access
+            slide.setAttribute("data-phone", person.phone);
+            slide.setAttribute("data-name", person.name);
+            
+            slide.innerHTML = `
+                <div class="birthday-profile">
+                    <img src="${person.img}" onerror="this.src='../assets/profiledp.jpeg'" alt="${person.name}">
+                    <h3>${person.name}</h3>
+                    <p>🎂 ${person.date}</p>
+                    <small>${person.role}</small>
+                </div>
+            `;
+            wrapper.appendChild(slide);
+        });
+
+        // Initialize Swiper
+        if (birthdaySwiper) birthdaySwiper.destroy(true, true);
+        
+        birthdaySwiper = new Swiper(".birthdaySwiper", {
+            slidesPerView: 1,
+            spaceBetween: 20,
+            loop: birthdays.length > 1, // Only loop if more than 1
+            autoplay: {
+                delay: 4000,
+                disableOnInteraction: false
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true
+            }
+        });
+    }
+
+    // Run Initialization
+    initBirthdaySlider();
+
+
+    // ==========================================
+    // --- 3. MAIN "SEND WISHES" BUTTON LOGIC ---
+    // ==========================================
+    if (wishBtn) {
+        wishBtn.addEventListener("click", function () {
+            if (!birthdaySwiper) return;
+
+            // Get the currently active slide index
+            const activeIndex = birthdaySwiper.realIndex;
+            const person = birthdays[activeIndex];
+
+            if (person) {
+                openWishModal(person);
+            } else {
+                alert("No active birthday selected.");
+            }
+        });
+    }
+
+
+    // ==========================================
+    // --- 4. MODAL & WHATSAPP LOGIC ---
+    // ==========================================
     
-    if (!wrapper) return;
+    const wishModal = document.getElementById("wishModal");
+    const successWishModal = document.getElementById("successWishModal");
+    const allBdayModal = document.getElementById("allBirthdaysModal");
+    
+    // Inputs
+    const wishTargetNameEl = document.getElementById("wishTargetName");
+    const wishMessageEl = document.getElementById("wishMessage");
 
-    wrapper.innerHTML = "";
-    allFetchedBirthdays = []; // Clear list
-    hasActiveBirthday = false; // Reset flag
+    // A. Open Wish Modal
+    window.openWishModal = function (personOrName) {
+        // Pause slider so it doesn't move while wishing
+        if (birthdaySwiper && birthdaySwiper.autoplay.running) birthdaySwiper.autoplay.stop();
 
-    // 1. 🎂 PROCESS TODAY'S BIRTHDAYS (SLIDER ONLY)
-    if (data.today && data.today.length > 0) {
-      hasActiveBirthday = true;
-      
-      data.today.forEach(emp => {
-        const slide = document.createElement("div");
-        slide.className = "swiper-slide";
-        // IMPORTANT: Add data-id so we know who to wish
-        slide.dataset.id = emp.id;
-        slide.dataset.name = emp.name;
+        let person = null;
 
-        slide.innerHTML = `
-          <div class="birthday-profile">
-            <img src="${emp.profile_image ? emp.profile_image : '../assets/profiledp.jpeg'}" onerror="this.src='../assets/profiledp.jpeg'">
-            <h3>${emp.name}</h3>
-            <p>🎂 Birthday Today</p>
-          </div>
-        `;
-        wrapper.appendChild(slide);
-      });
+        if (typeof personOrName === 'string') {
+            // If called from "View All" (passed as name string)
+            person = birthdays.find(p => p.name === personOrName);
+        } else {
+            // If called from Main Card (passed as object)
+            person = personOrName;
+        }
 
-      // Enable the button visually
-      if(wishBtn) {
-        wishBtn.style.opacity = "1";
-        wishBtn.style.cursor = "pointer";
-        wishBtn.innerText = "Send Wishes";
-      }
+        if (person) {
+            currentTargetPhone = person.phone;
+            
+            if (wishTargetNameEl) wishTargetNameEl.innerText = person.name;
+            if (wishMessageEl) wishMessageEl.value = `Happy Birthday ${person.name}! 🎂 Wishing you a fantastic year ahead!`;
 
-    } else {
-      // 2. 🚫 NO ACTIVE BIRTHDAYS LOGIC
-      hasActiveBirthday = false;
-      
-      const slide = document.createElement("div");
-      slide.className = "swiper-slide";
-      // No ID attached here
-      slide.innerHTML = `
-        <div class="birthday-profile">
-          <img src="../assets/profiledp.jpeg" style="filter: grayscale(100%); opacity: 0.5;">
-          <h3>No Active Birthdays</h3>
-          <p>Check "View All" for upcoming</p>
-        </div>
-      `;
-      wrapper.appendChild(slide);
+            if (wishModal) wishModal.classList.add("active");
+        }
+    };
 
-      // Disable the wish button visually
-      if(wishBtn) {
-        wishBtn.style.opacity = "0.6";
-        wishBtn.style.cursor = "not-allowed";
-        wishBtn.innerText = "No Birthdays Today";
-      }
-    }
+    // B. Close Wish Modal
+    window.closeWishModal = function () {
+        if (wishModal) wishModal.classList.remove("active");
+        // Resume slider
+        if (birthdaySwiper) birthdaySwiper.autoplay.start();
+    };
 
-    // 3. 🎉 PROCESS UPCOMING BIRTHDAYS (VIEW ALL LIST ONLY)
-    // We DO NOT add these to the slider wrapper anymore
-    if (data.upcoming && data.upcoming.length > 0) {
-      data.upcoming.forEach(emp => {
-        // Add to global list for "View All" logic
-        allFetchedBirthdays.push({ ...emp, label: "Upcoming", displayDate: emp.dob || "Upcoming" });
-      });
-    }
+    // C. Submit Wish (WhatsApp Logic from Admin Page)
+    window.submitWish = function () {
+        const btn = document.querySelector(".btn-send-wish");
+        const originalText = btn.innerHTML;
+        const message = wishMessageEl ? wishMessageEl.value : "Happy Birthday!";
+        const name = wishTargetNameEl ? wishTargetNameEl.innerText : "Employee";
 
-    // Initialize Swiper
-    new Swiper(".birthdaySwiper", {
-      slidesPerView: 1,
-      spaceBetween: 20,
-      loop: hasActiveBirthday, // Only loop if there are actual birthdays
-      autoplay: hasActiveBirthday ? {
-        delay: 3000,
-        disableOnInteraction: false
-      } : false, // Disable autoplay if no birthdays
-      pagination: {
-        el: ".swiper-pagination",
-        clickable: true
-      }
-    });
+        // 1. Validate Phone
+        if (!currentTargetPhone) {
+            alert("Phone number missing for this employee.");
+            return;
+        }
 
-  } catch (error) {
-    console.error("Birthday fetch error:", error);
-  }
+        // Clean phone (remove spaces/dashes)
+        const cleanPhone = currentTargetPhone.replace(/\D/g, '');
+
+        // 2. UI Loading State
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Opening WhatsApp...';
+        btn.disabled = true;
+
+        // 3. Process with Delay (to allow UI to update and prevent blockers)
+        setTimeout(() => {
+            // Construct URL
+            const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+
+            // Open WhatsApp
+            window.open(whatsappUrl, '_blank');
+
+            // Close Modal & Reset UI
+            closeWishModal();
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+
+            // Show Success
+            openSuccessWishModal(name);
+
+        }, 1000); // 1 Second delay
+    };
+
+    // D. Success Modal
+    window.openSuccessWishModal = function (name) {
+        const successNameEl = document.getElementById("successName");
+        if (successNameEl) successNameEl.innerText = name;
+        if (successWishModal) successWishModal.classList.add("active");
+    };
+
+    window.closeSuccessWishModal = function () {
+        if (successWishModal) successWishModal.classList.remove("active");
+    };
+
+
+    // ==========================================
+    // --- 5. VIEW ALL MODAL LOGIC ---
+    // ==========================================
+    
+    window.openAllBirthdaysModal = function () {
+        const listContainer = document.getElementById("bdayListContainer");
+        if (listContainer) {
+            listContainer.innerHTML = "";
+            
+            birthdays.forEach(person => {
+                const item = document.createElement("div");
+                item.className = "bday-list-item"; // Ensure CSS exists
+                
+                // Inline styles for reliability
+                item.style.display = "flex";
+                item.style.justifyContent = "space-between";
+                item.style.alignItems = "center";
+                item.style.padding = "10px";
+                item.style.borderBottom = "1px solid #eee";
+
+                item.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="${person.img}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" onerror="this.src='../assets/profiledp.jpeg'">
+                        <div>
+                            <h4 style="margin:0; font-size:14px;">${person.name}</h4>
+                            <span style="font-size:12px; color:#666;">${person.date} - ${person.role}</span>
+                        </div>
+                    </div>
+                    <button style="padding:5px 10px; background:#ff6b00; color:white; border:none; border-radius:4px; cursor:pointer;" 
+                        onclick="openWishModal('${person.name}')">
+                        Wish
+                    </button>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+        if (allBdayModal) allBdayModal.classList.add("active");
+    };
+
+    window.closeAllBirthdaysModal = function () {
+        if (allBdayModal) allBdayModal.classList.remove("active");
+    };
+
+    // ==========================================
+    // --- 6. CLOSE ON OUTSIDE CLICK ---
+    // ==========================================
+    window.onclick = function (event) {
+        if (event.target === wishModal) closeWishModal();
+        if (event.target === successWishModal) closeSuccessWishModal();
+        if (event.target === allBdayModal) closeAllBirthdaysModal();
+    };
 
 });
+
+
+
+
 
 document.addEventListener("DOMContentLoaded", function () {
 
