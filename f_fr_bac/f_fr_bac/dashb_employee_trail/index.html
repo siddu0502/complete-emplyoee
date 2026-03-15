@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oppty - Attendance Management</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Link to Custom CSS -->
+    <link rel="stylesheet" href="./hero_page.css">
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo-container">
+            <span><img src="../assets/opptylogo.png" alt="logo" style="width: 50%;" ></span>
+        </div>
+        <a href="./employee_login/emp_login.html" class="nav-btn">Login</a>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            
+            <!-- Glassmorphism Logo Area -->
+            <div class="glass-logo-box">
+                <div class="big-logo">
+                    
+                    <span class="logo-text-o"><img src="../assets/opptylogo.png" alt=""></span>
+                </div>
+            </div>
+
+            <h1>Welcome to <span>Oppty</span></h1>
+            <p>Professional Attendance & Leave Management</p>
+
+            <!-- Action Buttons -->
+            <div class="login-cards">
+                <!-- Employee Card -->
+                 <a href="./employee_login/emp_login.html" style="text-decoration: none;">
+                    <div class="card-btn card-employee">
+                    <div class="card-icon-circle">
+                        <i class="far fa-user"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">Employee Login</div>
+                        <div class="card-desc">Track your attendance</div>
+                    </div>
+                </div>
+                 </a>
+                
+
+                <!-- Admin Card -->
+                 <!-- <a href="../adminlogin/adminlogin.html" style="text-decoration: none;">
+                    <div class="card-btn card-admin">
+                    <div class="card-icon-circle">
+                        <i class="fas fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">Admin Login</div>
+                        <div class="card-desc">Manage team attendance</div>
+                    </div>
+                </div>
+                 </a> -->
+                
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="scroll-down" id="scrollBtn">
+            <div class="mouse-icon">
+                <div class="wheel"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="features-header">
+            <h2>Everything You Need to Manage Attendance</h2>
+            <p>Powerful features designed to simplify workforce management and boost productivity with Oppty.</p>
+        </div>
+
+        <div class="features-grid">
+            <!-- Card 1 -->
+            <div class="feature-card">
+                <div class="feature-icon-box">
+                    <i class="far fa-clock"></i>
+                </div>
+                <h3>Oppty Time Tracking</h3>
+                <p>Effortlessly clock in and out with precise timestamp recording for accurate attendance management.</p>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="feature-card">
+                <div class="feature-icon-box">
+                    <i class="far fa-calendar-check"></i>
+                </div>
+                <h3>Oppty Leave Management</h3>
+                <p>Submit leave requests, track approvals, and monitor your leave balance all in one place.</p>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="feature-card">
+                <div class="feature-icon-box">
+                    <i class="fas fa-users-viewfinder"></i>
+                </div>
+                <h3>Employee Portal</h3>
+                <p>Access your attendance records, view schedules, and manage your work hours with ease.</p>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="feature-card">
+                <div class="feature-icon-box">
+                    <i class="fas fa-chart-simple"></i>
+                </div>
+                <h3>Oppty Analytics</h3>
+                <p>Comprehensive insights and reports for administrators to track team attendance patterns.</p>
+            </div>
+
+            <!-- Card 5 -->
+            <div class="feature-card">
+                <div class="feature-icon-box">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Secure & Reliable</h3>
+                <p>Enterprise-grade security ensuring your attendance data is protected and always accessible.</p>
+            </div>
+
+            <!-- Card 6 -->
+            <div class="feature-card">
+                <div class="feature-icon-box">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3>Real-time Updates</h3>
+                <p>Instant synchronization across all devices for up-to-date attendance information.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Link to Javascript -->
+    <script src="./hero_page.js"></script>
+</body>
+</html>
