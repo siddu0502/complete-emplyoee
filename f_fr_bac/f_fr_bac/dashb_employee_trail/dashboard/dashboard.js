@@ -433,7 +433,7 @@ function performLogout() {
     localStorage.removeItem('profileImage');
     
     // Redirect to Login Page
-    window.location.href = '../employee_login/emp_login.html';
+    window.location.href = '../index.html';
 }
 
 // --- 4. CLOSE ON OUTSIDE CLICK ---
