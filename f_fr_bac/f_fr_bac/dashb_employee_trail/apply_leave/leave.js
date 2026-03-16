@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    // =============================
+   
     // 1. CONFIG & GLOBAL VARS
-    // =============================
+   
     const emp_id = localStorage.getItem("employee_id");
     const API_BASE = "http://13.51.167.95:8000/api/employee";
 
@@ -13,9 +13,9 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // =============================
+    
     // 2. DOM ELEMENTS
-    // =============================
+    
     // Modals
     const leaveModal = document.getElementById("lmLeaveModal");
     const successModal = document.getElementById("lmSuccessModal");
@@ -36,9 +36,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const reasonIn = document.getElementById("lmReason");
     const leaveForm = document.getElementById("lmLeaveForm");
 
-    // =============================
+    
     // 3. FETCH DATA FUNCTIONS
-    // =============================
+    
     function fetchDashboardData() {
         fetch(`${API_BASE}/dashboard/${emp_id}/`)
             .then(res => res.json())
