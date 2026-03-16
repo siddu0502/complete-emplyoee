@@ -405,15 +405,44 @@ window.onclick = function (event) {
 };
 
 // --- GLOBAL LOGOUT LOGIC ---
+// --- 1. OPEN LOGOUT MODAL ---
 function db_logoutUser() {
-    if (confirm("Are you sure you want to logout?")) {
-        // Clear session safely
-        localStorage.removeItem('employee_id');
-        localStorage.removeItem('profileImage'); // Optional: Clear cached image
-        // Redirect
-        window.location.href = '../employee_login/emp_login.html';
+    // Close the profile dropdown menu first (optional but cleaner)
+    const profileMenu = document.getElementById("db-profile-menu");
+    if (profileMenu) profileMenu.classList.remove("active");
+
+    // Show the Custom Logout Modal
+    const modal = document.getElementById("logout-confirm-modal");
+    if (modal) {
+        modal.classList.add("show"); // Uses your CSS class '.show' to make it visible
     }
 }
+
+// --- 2. CLOSE MODAL (Cancel Button) ---
+function closeLogoutModal() {
+    const modal = document.getElementById("logout-confirm-modal");
+    if (modal) {
+        modal.classList.remove("show");
+    }
+}
+
+// --- 3. PERFORM LOGOUT (Yes Button) ---
+function performLogout() {
+    // Clear session data
+    localStorage.removeItem('employee_id');
+    localStorage.removeItem('profileImage');
+    
+    // Redirect to Login Page
+    window.location.href = '../employee_login/emp_login.html';
+}
+
+// --- 4. CLOSE ON OUTSIDE CLICK ---
+window.addEventListener('click', function(e) {
+    const modal = document.getElementById("logout-confirm-modal");
+    if (e.target === modal) {
+        closeLogoutModal();
+    }
+});
 
 // =========================================
 // 9. SMART RULE-BASED CHATBOT
