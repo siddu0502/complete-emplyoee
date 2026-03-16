@@ -3,147 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oppty - Attendance Management</title>
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Link to Custom CSS -->
-    <link rel="stylesheet" href="./hero_page.css">
+    <title>Oppty - Professional Attendance & Leave Management</title>
+    <link rel="icon" type="image/png" href="./assets/opptylogo2.png">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-
-    <!-- Header -->
-    <header class="header">
-        <div class="logo-container">
-            <span><img src="../assets/opptylogo.png" alt="logo" style="width: 50%;" ></span>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <span class="logo-text"><img src="./assets/opptylogo.png" alt="logo" style="height: 35px;"></span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="./employee_login/emp_login.html">Login</a></li>
+            </ul>
         </div>
-        <a href="./employee_login/emp_login.html" class="nav-btn">Login</a>
-    </header>
+    </nav>
 
     <!-- Hero Section -->
-    <section class="hero">
+    <section id="home" class="hero">
         <div class="hero-content">
-            
-            <!-- Glassmorphism Logo Area -->
-            <div class="glass-logo-box">
-                <div class="big-logo">
-                    
-                    <span class="logo-text-o"><img src="../assets/opptylogo.png" alt=""></span>
-                </div>
-            </div>
-
-            <h1>Welcome to <span>Oppty</span></h1>
-            <p>Professional Attendance & Leave Management</p>
-
-            <!-- Action Buttons -->
-            <div class="login-cards">
-                <!-- Employee Card -->
-                 <a href="./employee_login/emp_login.html" style="text-decoration: none;">
-                    <div class="card-btn card-employee">
-                    <div class="card-icon-circle">
-                        <i class="far fa-user"></i>
-                    </div>
-                    <div>
-                        <div class="card-title">Employee Login</div>
-                        <div class="card-desc">Track your attendance</div>
-                    </div>
-                </div>
-                 </a>
-                
-
-                <!-- Admin Card -->
-                 <!-- <a href="../adminlogin/adminlogin.html" style="text-decoration: none;">
-                    <div class="card-btn card-admin">
-                    <div class="card-icon-circle">
-                        <i class="fas fa-shield-halved"></i>
-                    </div>
-                    <div>
-                        <div class="card-title">Admin Login</div>
-                        <div class="card-desc">Manage team attendance</div>
-                    </div>
-                </div>
-                 </a> -->
-                
+            <h1 class="hero-title">
+                <span class="title-line">Welcome to</span>
+                <span class="title-line oppty-name"><img src="./assets/opptylogo.png" alt=""></span>
+            </h1>
+            <p class="hero-subtitle">Professional Attendance & Leave Management</p>
+            <p class="hero-description">Track your attendance with precision and manage your leave effortlessly</p>
+            <div class="hero-buttons">
+                <a href="#features" class="btn btn-primary">Get Started</a>
+                <a href="#contact" class="btn btn-secondary">Learn More</a>
             </div>
         </div>
-
-        <!-- Scroll Indicator -->
-        <div class="scroll-down" id="scrollBtn">
-            <div class="mouse-icon">
-                <div class="wheel"></div>
-            </div>
+        <div class="hero-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="floating-circle circle-1"></div>
+            <div class="floating-circle circle-2"></div>
+            <div class="floating-circle circle-3"></div>
+            <div class="particle particle-1"></div>
+            <div class="particle particle-2"></div>
+            <div class="particle particle-3"></div>
+            <div class="particle particle-4"></div>
+            <div class="particle particle-5"></div>
+            <div class="particle particle-6"></div>
+            <div class="diamond diamond-1"></div>
+            <div class="diamond diamond-2"></div>
+            <div class="diamond diamond-3"></div>
+            <div class="wave-line wave-1"></div>
+            <div class="wave-line wave-2"></div>
+            <div class="wave-line wave-3"></div>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="features-header">
-            <h2>Everything You Need to Manage Attendance</h2>
-            <p>Powerful features designed to simplify workforce management and boost productivity with Oppty.</p>
-        </div>
-
-        <div class="features-grid">
-            <!-- Card 1 -->
-            <div class="feature-card">
-                <div class="feature-icon-box">
-                    <i class="far fa-clock"></i>
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Everything You Need to Manage Attendance</h2>
+            <p class="section-subtitle">Powerful features designed to simplify workforce management and boost productivity with Oppty</p>
+            
+            <div class="features-grid">
+                <!-- Feature 1 -->
+                <div class="feature-card">
+                    <div class="card-icon">
+                        <div class="icon-box">⏰</div>
+                    </div>
+                    <h3>Oppty Time Tracking</h3>
+                    <p>Effortlessly clock in and out with precise timestamp recording for accurate attendance management.</p>
+                    <div class="card-overlay"></div>
                 </div>
-                <h3>Oppty Time Tracking</h3>
-                <p>Effortlessly clock in and out with precise timestamp recording for accurate attendance management.</p>
-            </div>
 
-            <!-- Card 2 -->
-            <div class="feature-card">
-                <div class="feature-icon-box">
-                    <i class="far fa-calendar-check"></i>
+                <!-- Feature 2 -->
+                <div class="feature-card">
+                    <div class="card-icon">
+                        <div class="icon-box">📅</div>
+                    </div>
+                    <h3>Oppty Leave Management</h3>
+                    <p>Submit leave requests, track approvals, and monitor your leave balance all in one place.</p>
+                    <div class="card-overlay"></div>
                 </div>
-                <h3>Oppty Leave Management</h3>
-                <p>Submit leave requests, track approvals, and monitor your leave balance all in one place.</p>
-            </div>
 
-            <!-- Card 3 -->
-            <div class="feature-card">
-                <div class="feature-icon-box">
-                    <i class="fas fa-users-viewfinder"></i>
+                <!-- Feature 3 -->
+                <div class="feature-card">
+                    <div class="card-icon">
+                        <div class="icon-box">👤</div>
+                    </div>
+                    <h3>Employee Portal</h3>
+                    <p>Access your attendance records, view schedules, and manage your work hours with ease.</p>
+                    <div class="card-overlay"></div>
                 </div>
-                <h3>Employee Portal</h3>
-                <p>Access your attendance records, view schedules, and manage your work hours with ease.</p>
-            </div>
 
-            <!-- Card 4 -->
-            <div class="feature-card">
-                <div class="feature-icon-box">
-                    <i class="fas fa-chart-simple"></i>
+                <!-- Feature 4 -->
+                <div class="feature-card">
+                    <div class="card-icon">
+                        <div class="icon-box">📊</div>
+                    </div>
+                    <h3>Oppty Analytics</h3>
+                    <p>Comprehensive insights and reports for administrators to track team attendance patterns.</p>
+                    <div class="card-overlay"></div>
                 </div>
-                <h3>Oppty Analytics</h3>
-                <p>Comprehensive insights and reports for administrators to track team attendance patterns.</p>
-            </div>
 
-            <!-- Card 5 -->
-            <div class="feature-card">
-                <div class="feature-icon-box">
-                    <i class="fas fa-shield-alt"></i>
+                <!-- Feature 5 -->
+                <div class="feature-card">
+                    <div class="card-icon">
+                        <div class="icon-box">🔒</div>
+                    </div>
+                    <h3>Secure & Reliable</h3>
+                    <p>Enterprise-grade security ensuring your attendance data is protected and always accessible.</p>
+                    <div class="card-overlay"></div>
                 </div>
-                <h3>Secure & Reliable</h3>
-                <p>Enterprise-grade security ensuring your attendance data is protected and always accessible.</p>
-            </div>
 
-            <!-- Card 6 -->
-            <div class="feature-card">
-                <div class="feature-icon-box">
-                    <i class="fas fa-bolt"></i>
+                <!-- Feature 6 -->
+                <div class="feature-card">
+                    <div class="card-icon">
+                        <div class="icon-box">⚡</div>
+                    </div>
+                    <h3>Real-time Updates</h3>
+                    <p>Instant synchronization across all devices for up-to-date attendance information.</p>
+                    <div class="card-overlay"></div>
                 </div>
-                <h3>Real-time Updates</h3>
-                <p>Instant synchronization across all devices for up-to-date attendance information.</p>
             </div>
         </div>
     </section>
 
-    <!-- Link to Javascript -->
-    <script src="./hero_page.js"></script>
+
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <h2 class="section-title">Get in Touch</h2>
+            <p class="section-subtitle">Have questions? We'd love to hear from you</p>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <span class="contact-icon">📧</span>
+                    <p>support@oppty.com</p>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">📞</span>
+                    <p>+1 (555) 123-4567</p>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">📍</span>
+                    <p>123 Business Ave, Tech City</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <span class="logo-text"><img src="./assets/opptylogo.png" alt=""></span>
+                    <p>Professional Attendance & Leave Management</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#features">Features</a></li>
+                    </ul>
+                </div>
+                <div class="footer-social">
+                    <h4>Follow Us</h4>
+                    <div class="social-icons">
+                        <a href="#" class="social-icon">f</a>
+                        <a href="#" class="social-icon">t</a>
+                        <a href="#" class="social-icon">in</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Oppty. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
