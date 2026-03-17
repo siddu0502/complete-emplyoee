@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ==========================================
     // 2. FETCH REAL USER DATA FROM BACKEND
     // ==========================================
-    fetch(`http://127.0.0.1:8000/api/employee/dashboard/${emp_id}/`)
+    fetch(`http://13.51.167.95:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
             console.log("Employee Data:", data);
@@ -82,11 +82,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 lName = parts.slice(1).join(" ");
             }
 
+            let profileImageUrl = "";
+            if (data.profile_pic) {
+                // Construct full URL using your server IP
+                profileImageUrl = `http://13.51.167.95:8000${data.profile_pic}`;
+            }
             loadUserProfile({
                 firstName: fName,
                 lastName: lName,
                 empId: data.employee_id || emp_id,
-                profilePic: "" // Provide actual image URL here if backend sends one
+                profilePic: profileImageUrl // Provide actual image URL here if backend sends one
             });
 
         })
@@ -161,7 +166,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 city: document.getElementById('input_city') ? document.getElementById('input_city').value : ""
             };
 
-            fetch(`http://127.0.0.1:8000/api/update-employee/${emp_id}/`, {
+            fetch(`http://13.51.167.95:8000/api/update-employee/${emp_id}/`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(profileData)
@@ -227,7 +232,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 dob: document.getElementById('input_other_dob') ? document.getElementById('input_other_dob').value : "",
             };
 
-            fetch(`http://127.0.0.1:8000/api/update-employee/${emp_id}/`, {
+            fetch(`http://13.51.167.95:8000/api/update-employee/${emp_id}/`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(profileData)
@@ -328,13 +333,6 @@ function loadUserProfile(user) {
     if (nameEl) nameEl.textContent = `${user.firstName} ${user.lastName}`;
     if (empIdEl) empIdEl.textContent = user.empId;
 
-    // --- NEW: Grab the saved image from localStorage ---
-    const savedImage = localStorage.getItem("profileImage");
-    if (savedImage) {
-        user.profilePic = savedImage;
-    }
-    // ---------------------------------------------------
-
     updateAvatar("db-trigger-avatar-box", "db-trigger-img", user);
     updateAvatar("db-header-avatar-box", "db-header-img", user);
 }
@@ -385,7 +383,7 @@ async function fetchNotifications() {
     if (!emp_id || !notifList) return;
 
     try {
-        const res = await fetch(`http://127.0.0.1:8000/api/notofications/${emp_id}/`);
+        const res = await fetch(`http://13.51.167.95:8000/api/notofications/${emp_id}/`);
         const data = await res.json();
 
         // Update Badge Count

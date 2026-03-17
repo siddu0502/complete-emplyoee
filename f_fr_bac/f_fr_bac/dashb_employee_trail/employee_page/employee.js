@@ -1,66 +1,65 @@
 document.addEventListener("DOMContentLoaded", function () {
-
-    // ==========================================
-    // --- 1. BIRTHDAY SLIDER & WHATSAPP LOGIC ---
-    // ==========================================
-    const birthdays = [
-        { 
-            id: 1, 
-            name: "Dhamodhar", 
-            role: "IOS Developer", 
-            date: "Today, 24 Oct", 
-            phone: "918790997602", 
-            img: "../assets/profiledp.jpeg" 
-        },
-        { 
-            id: 2, 
-            name: "Saleem", 
-            role: "UI Designer", 
-            date: "Today, 25 Oct", 
-            phone: "917075653250", 
-            img: "../assets/profiledp.jpeg" 
-        },
-        { 
-            id: 3, 
-            name: "Balaji", 
-            role: "Product Manager", 
-            date: "26 Oct", 
-            phone: "918309930827", 
-            img: "../assets/profiledp.jpeg" 
-        },
-        { 
-            id: 4, 
-            name: "Manikanta", 
-            role: "QA Engineer", 
-            date: "28 Oct", 
-            phone: "917036084043", 
-            img: "../assets/profiledp.jpeg" 
-        }
-    ];
-
-    let currentTargetPhone = ""; 
+    const API_BASE = "http://13.51.167.95:8000"; // Live Server IP
+    const emp_id = localStorage.getItem('employee_id');
+    
     let birthdaySwiper = null;
+    let todayBirthdays = [];    // Real data for slider
+    let upcomingBirthdays = []; // Real data for modal
     const wrapper = document.getElementById("birthdayWrapper");
     const wishBtn = document.getElementById('sendWishBtn');
 
-    function initBirthdaySlider() {
+    // ==========================================
+    // --- 1. FETCH BIRTHDAYS FROM SERVER ---
+    // ==========================================
+    fetch(`${API_BASE}/api/birthdays/`)
+        .then(res => {
+            if (!res.ok) throw new Error("Server error (500)");
+            return res.json();
+        })
+        .then(data => {
+            todayBirthdays = data.today || [];
+            upcomingBirthdays = data.upcoming || [];
+
+            // Initialize slider ONLY with today's birthdays
+            initBirthdaySlider(todayBirthdays);
+        })
+        .catch(err => {
+            console.error("Birthday Fetch Error:", err);
+            if(wrapper) wrapper.innerHTML = `<div class="swiper-slide"><div class="birthday-profile"><h3>Could not load birthdays</h3></div></div>`;
+        });
+
+    function initBirthdaySlider(dataList) {
         if (!wrapper) return;
         wrapper.innerHTML = ""; 
 
-        if (birthdays.length === 0) {
-            wrapper.innerHTML = `<div class="swiper-slide"><div class="birthday-profile"><h3>No Birthdays Today</h3></div></div>`;
+        if (!dataList || dataList.length === 0) {
+            wrapper.innerHTML = `
+                <div class="swiper-slide">
+                    <div class="birthday-profile">
+                        <img src="../assets/profiledp.jpeg" style="filter: grayscale(1); opacity: 0.5;">
+                        <h3>No Birthdays Today</h3>
+                        <p>Check "View All" for upcoming</p>
+                    </div>
+                </div>`;
+            if(wishBtn) wishBtn.style.display = "none";
             return;
         }
 
-        birthdays.forEach(person => {
+        if(wishBtn) wishBtn.style.display = "block";
+
+        dataList.forEach(person => {
             const slide = document.createElement("div");
             slide.className = "swiper-slide";
+            // Store phone and name in dataset for the Send Wish logic
+            slide.setAttribute("data-phone", person.mobile || "");
+            slide.setAttribute("data-name", person.name || "");
+            
             slide.innerHTML = `
                 <div class="birthday-profile">
-                    <img src="${person.img}" onerror="this.src='../assets/profiledp.jpeg'" alt="${person.name}">
+                    <img src="../assets/profiledp.jpeg" alt="${person.name}">
                     <h3>${person.name}</h3>
-                    <p>🎂 ${person.date}</p>
-                    <small>${person.role}</small>
+                    <p>🎂 Today, ${person.dob}</p>
+                    <small>${person.role || 'Team Member'}</small>
                 </div>
             `;
             wrapper.appendChild(slide);
@@ -70,38 +69,41 @@ document.addEventListener("DOMContentLoaded", function () {
         birthdaySwiper = new Swiper(".birthdaySwiper", {
             slidesPerView: 1,
             spaceBetween: 20,
-            loop: birthdays.length > 1,
+            loop: dataList.length > 1,
             autoplay: { delay: 4000, disableOnInteraction: false },
             pagination: { el: ".swiper-pagination", clickable: true }
         });
     }
 
-    initBirthdaySlider();
-
-    if (wishBtn) {
-        wishBtn.addEventListener("click", function () {
-            if (!birthdaySwiper) return;
-            const person = birthdays[birthdaySwiper.realIndex];
-            if (person) openWishModal(person);
-        });
-    }
-
-    // Modal Elements
+    // ==========================================
+    // --- 2. MODAL & SEND WISH LOGIC ---
+    // ==========================================
     const wishModal = document.getElementById("wishModal");
     const successWishModal = document.getElementById("successWishModal");
     const allBdayModal = document.getElementById("allBirthdaysModal");
     const wishTargetNameEl = document.getElementById("wishTargetName");
     const wishMessageEl = document.getElementById("wishMessage");
+    let currentTargetPhone = "";
 
-    window.openWishModal = function (personOrName) {
+    // Wish button under Slider
+    if (wishBtn) {
+        wishBtn.addEventListener("click", function () {
+            const activeSlide = document.querySelector('.swiper-slide-active');
+            if (!activeSlide) return;
+
+            const name = activeSlide.getAttribute('data-name');
+            const phone = activeSlide.getAttribute('data-phone');
+
+            if (name) openWishModal({ name, phone });
+        });
+    }
+
+    window.openWishModal = function (person) {
         if (birthdaySwiper) birthdaySwiper.autoplay.stop();
-        let person = (typeof personOrName === 'string') ? birthdays.find(p => p.name === personOrName) : personOrName;
-        if (person) {
-            currentTargetPhone = person.phone;
-            if (wishTargetNameEl) wishTargetNameEl.innerText = person.name;
-            if (wishMessageEl) wishMessageEl.value = `Happy Birthday ${person.name}! 🎂 Wishing you a fantastic year ahead!`;
-            if (wishModal) wishModal.classList.add("active");
-        }
+        currentTargetPhone = person.phone || "";
+        if (wishTargetNameEl) wishTargetNameEl.innerText = person.name;
+        if (wishMessageEl) wishMessageEl.value = `Happy Birthday ${person.name}! 🎂 Wishing you a fantastic year ahead!`;
+        if (wishModal) wishModal.classList.add("active");
     };
 
     window.closeWishModal = function () {
@@ -110,9 +112,14 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     window.submitWish = function () {
-        const btn = document.querySelector(".btn-send-wish");
+        if (!currentTargetPhone || currentTargetPhone === "null" || currentTargetPhone === "") {
+            alert("No phone number registered for this employee.");
+            return;
+        }
+        const message = wishMessageEl ? wishMessageEl.value : "Happy Birthday!";
         const cleanPhone = currentTargetPhone.replace(/\D/g, '');
-        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(wishMessageEl.value)}`, '_blank');
+        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+        
         closeWishModal();
         if (successWishModal) successWishModal.classList.add("active");
     };
@@ -123,15 +130,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     window.openAllBirthdaysModal = function () {
         const listContainer = document.getElementById("bdayListContainer");
+        const allBirthdays = [...todayBirthdays, ...upcomingBirthdays];
+        
         if (listContainer) {
-            listContainer.innerHTML = birthdays.map(p => `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <img src="${p.img}" style="width:40px; height:40px; border-radius:50%;" onerror="this.src='../assets/profiledp.jpeg'">
-                        <div><h4 style="margin:0;">${p.name}</h4><span>${p.date}</span></div>
-                    </div>
-                    <button style="padding:5px 10px; background:#ff6b00; color:white; border:none; border-radius:4px;" onclick="openWishModal('${p.name}')">Wish</button>
-                </div>`).join("");
+            if (allBirthdays.length === 0) {
+                listContainer.innerHTML = "<p style='text-align:center; padding:20px;'>No birthday records found.</p>";
+            } else {
+                listContainer.innerHTML = allBirthdays.map(p => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <img src="../assets/profiledp.jpeg" style="width:40px; height:40px; border-radius:50%;">
+                            <div>
+                                <h4 style="margin:0; font-size:14px;">${p.name}</h4>
+                                <span style="font-size:12px; color:#666;">${p.dob}</span>
+                            </div>
+                        </div>
+                        <button style="padding:5px 10px; background:#ff6b00; color:white; border:none; border-radius:4px; cursor:pointer;" 
+                            onclick="openWishModal({name: '${p.name}', phone: '${p.mobile}'})">
+                            Wish
+                        </button>
+                    </div>`).join("");
+            }
         }
         if (allBdayModal) allBdayModal.classList.add("active");
     };
@@ -141,12 +160,8 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     // ==========================================
-    // --- 2. PROFILE IMAGE UPLOAD & HEADER SYNC ---
+    // --- 3. PROFILE & IMAGE UPLOAD ---
     // ==========================================
-    // ==========================================
-    // --- 2. PROFILE IMAGE UPLOAD (SERVER SYNC) ---
-    // ==========================================
-    const emp_id = localStorage.getItem('employee_id');
     const uploadInput = document.getElementById("imageUpload");
     const profileImage = document.getElementById("profileImage");
 
@@ -154,8 +169,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (uploadInput) uploadInput.click();
     };
 
-    // 1. INITIAL FETCH: Get the image URL from the Database
-    fetch(`http://13.51.167.95:8000/api/employee/dashboard/${emp_id}/`)
+    fetch(`${API_BASE}/api/employee/dashboard/${emp_id}/`)
     .then(res => res.json())
     .then(data => {
         document.getElementById("name").innerText = data.name;
@@ -167,12 +181,9 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("mobile").innerText = data.other_details[0].mobile;
         }
 
-        // --- NEW: Load the image from the Server URL ---
         if (data.profile_pic) {
-            const serverImageUrl = `http://13.51.167.95:8000${data.profile_pic}`;
+            const serverImageUrl = `${API_BASE}${data.profile_pic}`;
             profileImage.src = serverImageUrl;
-            
-            // Sync to Header
             if (typeof loadUserProfile === "function") {
                 const names = (data.name || "Employee").split(" ");
                 loadUserProfile({
@@ -185,32 +196,26 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // 2. UPLOAD HANDLER: Send file to Server
     if (uploadInput && profileImage) {
         uploadInput.addEventListener("change", function () {
             const file = this.files[0];
             if (!file) return;
 
-            // Prepare the form data
             const formData = new FormData();
-            formData.append("profile_pic", file); // Must match the field name in your Django model
+            formData.append("profile_pic", file);
 
-            // Send to the new Django API endpoint
-            fetch(`http://127.0.0.1:8000/api/upload-profile-pic/${emp_id}/`, {
+            fetch(`${API_BASE}/api/upload-profile-pic/${emp_id}/`, {
                 method: "PATCH",
                 body: formData
             })
             .then(res => res.json())
             .then(data => {
                 if (data.profile_pic_url) {
-                    const fullUrl = `http://127.0.0.1:8000${data.profile_pic_url}`;
-                    
-                    // Update UI immediately with the server version
+                    const fullUrl = `${API_BASE}${data.profile_pic_url}`;
                     profileImage.src = fullUrl;
-                    
-                    // Update Top Header Instantly
                     if (typeof loadUserProfile === "function") {
-                        const parts = document.getElementById("p_name").innerText.split(" ");
+                        const currentName = document.getElementById("p_name").innerText;
+                        const parts = currentName.split(" ");
                         loadUserProfile({ 
                             firstName: parts[0], 
                             lastName: parts.length > 1 ? parts.slice(1).join(" ") : "", 
@@ -221,36 +226,20 @@ document.addEventListener("DOMContentLoaded", function () {
                     alert("Profile picture saved to server!");
                 }
             })
-            .catch(err => {
-                console.error("Server upload failed:", err);
-                alert("Failed to save image to server.");
-            });
+            .catch(err => console.error("Server upload failed:", err));
         });
     }
 
     // ==========================================
-    // --- 3. UI SIDEBAR & HOLIDAYS ---
+    // --- 4. SIDEBAR & GLOBAL CLICKS ---
     // ==========================================
     const sidebar = document.getElementById("sidebar");
-    const mainContent = document.getElementById("mainContent");
-    const toggleBtn = document.getElementById("sidebarToggle");
     const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-
-    if(toggleBtn) {
-        toggleBtn.addEventListener("click", () => {
-            sidebar.classList.toggle("collapsed");
-            mainContent.classList.toggle("expanded");
-        });
-    }
-
-    if(mobileMenuBtn) {
-        mobileMenuBtn.addEventListener("click", () => sidebar.classList.toggle("active"));
-    }
-
     const holidayPopup = document.getElementById("holidayPopup");
     const openHoliday = document.getElementById("viewHolidayBtn");
     const closeHoliday = document.getElementById("closeHoliday");
 
+    if(mobileMenuBtn) mobileMenuBtn.addEventListener("click", () => sidebar.classList.toggle("active"));
     if(openHoliday) openHoliday.onclick = () => holidayPopup.classList.add("active");
     if(closeHoliday) closeHoliday.onclick = () => holidayPopup.classList.remove("active");
 
