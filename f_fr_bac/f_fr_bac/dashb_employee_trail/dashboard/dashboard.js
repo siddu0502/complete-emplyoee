@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ==========================================
     // 2. FETCH REAL USER DATA FROM BACKEND
     // ==========================================
-    fetch(`http://13.51.167.95:8000/api/employee/dashboard/${emp_id}/`)
+    fetch(`http://127.0.0.1:8000/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
             console.log("Employee Data:", data);
@@ -161,7 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 city: document.getElementById('input_city') ? document.getElementById('input_city').value : ""
             };
 
-            fetch(`http://13.51.167.95:8000/api/update-employee/${emp_id}/`, {
+            fetch(`http://127.0.0.1:8000/api/update-employee/${emp_id}/`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(profileData)
@@ -227,7 +227,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 dob: document.getElementById('input_other_dob') ? document.getElementById('input_other_dob').value : "",
             };
 
-            fetch(`http://13.51.167.95:8000/api/update-employee/${emp_id}/`, {
+            fetch(`http://127.0.0.1:8000/api/update-employee/${emp_id}/`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(profileData)
@@ -318,12 +318,22 @@ document.addEventListener("DOMContentLoaded", function () {
 // ==========================================
 // 7. AVATAR & INITIALS LOGIC (Universal)
 // ==========================================
+// ==========================================
+// 7. AVATAR & INITIALS LOGIC (Universal)
+// ==========================================
 function loadUserProfile(user) {
     const nameEl = document.getElementById("db-user-name");
     const empIdEl = document.getElementById("db-employee-id");
 
     if (nameEl) nameEl.textContent = `${user.firstName} ${user.lastName}`;
     if (empIdEl) empIdEl.textContent = user.empId;
+
+    // --- NEW: Grab the saved image from localStorage ---
+    const savedImage = localStorage.getItem("profileImage");
+    if (savedImage) {
+        user.profilePic = savedImage;
+    }
+    // ---------------------------------------------------
 
     updateAvatar("db-trigger-avatar-box", "db-trigger-img", user);
     updateAvatar("db-header-avatar-box", "db-header-img", user);
@@ -339,6 +349,10 @@ function updateAvatar(containerId, imgId, user) {
         if (imgElement) {
             imgElement.src = user.profilePic;
             imgElement.style.display = "block";
+            imgElement.style.width = "100%"; // Ensures it fits the circle
+            imgElement.style.height = "100%"; 
+            imgElement.style.objectFit = "cover";
+            imgElement.style.borderRadius = "50%";
         }
         const existingInitials = container.querySelector('.avatar-initials');
         if (existingInitials) existingInitials.remove();
@@ -362,15 +376,70 @@ function updateAvatar(containerId, imgId, user) {
 // ==========================================
 // 8. NOTIFICATIONS, PROFILE MENU & LOGOUT
 // ==========================================
+// --- NOTIFICATION FETCH LOGIC ---
+async function fetchNotifications() {
+    const emp_id = localStorage.getItem('employee_id');
+    const notifList = document.getElementById("db-notif-list"); // We will add this ID to HTML
+    const badge = document.querySelector(".db-notif-badge");
+
+    if (!emp_id || !notifList) return;
+
+    try {
+        const res = await fetch(`http://127.0.0.1:8000/api/notofications/${emp_id}/`);
+        const data = await res.json();
+
+        // Update Badge Count
+        const unreadCount = data.filter(n => !n.is_read).length;
+        if (badge) {
+            badge.innerText = unreadCount;
+            badge.style.display = unreadCount > 0 ? "flex" : "none";
+        }
+
+        // Clear and Render List
+        notifList.innerHTML = "";
+        if (data.length === 0) {
+            notifList.innerHTML = '<div class="db-notif-item"><p>No new notifications</p></div>';
+            return;
+        }
+
+        data.forEach(n => {
+            const timeStr = new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const item = `
+                <div class="db-notif-item ${n.is_read ? '' : 'unread'}">
+                    <div class="db-notif-symbol"><i class="fa-solid fa-bell"></i></div>
+                    <div class="db-notif-text">
+                        <h4>Update</h4>
+                        <p>${n.message}</p>
+                        <span class="db-time-ago">${timeStr}</span>
+                    </div>
+                </div>`;
+            notifList.innerHTML += item;
+        });
+    } catch (err) {
+        console.error("Error fetching notifications:", err);
+    }
+}
+
+// Update the toggle function to refresh notifications when opened
 function db_toggleNotifications() {
     const notifDropdown = document.getElementById('db-notification-menu');
     const notifBtn = document.querySelector('.db-notif-trigger-btn');
+    
     if (!notifDropdown || !notifBtn) return;
 
     db_closeProfile();
+    
+    const isOpening = !notifDropdown.classList.contains('db-show-menu');
+    if (isOpening) {
+        fetchNotifications(); // Load real data from Django
+    }
+
     notifDropdown.classList.toggle('db-show-menu');
     notifBtn.classList.toggle('db-active-state');
 }
+
+// Initial fetch on page load
+document.addEventListener("DOMContentLoaded", fetchNotifications);
 
 function db_toggleProfile() {
     const profileDropdown = document.getElementById('db-profile-menu');
