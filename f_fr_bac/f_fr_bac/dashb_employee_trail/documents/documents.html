@@ -263,6 +263,21 @@
         <main class="doc-main-content">
             <h2 class="doc-page-heading">Documents Repository</h2>
 
+            <!-- PROGRESS BAR SECTION -->
+            <div class="doc-content-card doc-progress-section">
+                <div class="doc-progress-header">
+                    <h3>Document Completion Status</h3>
+                    <span class="doc-progress-percentage" id="docProgressPercent">0%</span>
+                </div>
+                <div class="doc-progress-bar-container">
+                    <div class="doc-progress-bar" id="docProgressBar" style="width: 0%"></div>
+                </div>
+                <p class="doc-progress-text" id="docProgressText">0 of 7 documents uploaded</p>
+                <div class="doc-required-docs" id="docRequiredList">
+                    <!-- Required documents list will be populated by JS -->
+                </div>
+            </div>
+
             <!-- 1. DOCUMENT LIST SECTION -->
             <div class="doc-content-card">
                 <div class="doc-table-wrapper">
@@ -296,11 +311,15 @@
                             <label for="docTypeSelect" class="doc-label">Document Type</label>
                             <select id="docTypeSelect" class="doc-form-control">
                                 <option value="" disabled selected>Select type...</option>
-                                <option value="aadhar">aadhar**</option>
-                                <option value="pan">pan**</option>
-                                <option value="resume">resume</option>
-                                <option value="graduation">graduation**</option>
-                                <option value="photo">photo**</option>
+                                <option value="bank_details">Bank Details</option>
+                                <option value="pan">PAN</option>
+                                <option value="10_class_marks">10th Class Marks List</option>
+                                <option value="inter">Intermediate</option>
+                                <option value="btech">B.Tech</option>
+                                <option value="photo">Photo</option>
+                                <option value="aadhar">Aadhar</option>
+                                <option value="resume">Resume</option>
+                                <option value="graduation">Graduation</option>
                                 <option value="other">Other</option>
                             </select>
                         </div>

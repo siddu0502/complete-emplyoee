@@ -7,25 +7,62 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log(data)
             document.getElementById("name").innerText = data.name;
             document.getElementById("role").innerText = data.role;})
-    // const formData = new FormData();
 
-    // formData.append("aadhar_card", document.getElementById("aadhar").files[0]);
-    // formData.append("pan_card", document.getElementById("pan").files[0]);
-    // formData.append("resume", document.getElementById("resume").files[0]);
+    // Required documents list
+    const requiredDocs = [
+        { key: 'bank_details', label: 'Bank Details', icon: 'fa-university' },
+        { key: 'pan', label: 'PAN', icon: 'fa-id-card' },
+        { key: '10_class_marks', label: '10th Class', icon: 'fa-graduation-cap' },
+        { key: 'inter', label: 'Intermediate', icon: 'fa-school' },
+        { key: 'btech', label: 'B.Tech', icon: 'fa-university' },
+        { key: 'photo', label: 'Photo', icon: 'fa-camera' },
+        { key: 'aadhar', label: 'Aadhar', icon: 'fa-id-card' }
+    ];
 
-    // fetch(`http://13.60.70.185:8000/api/upload-documents/${emp_id}/`, {
-    //     method: "POST",
-    //     body: formData
-    // })
-    // .then(response => response.json())
-    // .then(data => {
-    //     console.log(data);
-    //     alert(data.message);
-    // })
-    // .catch(error => {
-    //     console.error("Error:", error);
-    // });
-    function documents_table (){
+    // Function to update progress bar
+    function updateProgressBar(uploadedDocs) {
+        const uploadedTypes = uploadedDocs.map(d => d.doc_type.toLowerCase());
+        const uploadedSet = new Set(uploadedTypes);
+        
+        let count = 0;
+        requiredDocs.forEach(doc => {
+            if (uploadedSet.has(doc.key)) {
+                count++;
+            }
+        });
+
+        const percentage = Math.round((count / requiredDocs.length) * 100);
+        
+        // Update progress bar
+        const progressBar = document.getElementById('docProgressBar');
+        const progressPercent = document.getElementById('docProgressPercent');
+        const progressText = document.getElementById('docProgressText');
+        const requiredList = document.getElementById('docRequiredList');
+
+        if (progressBar) {
+            progressBar.style.width = percentage + '%';
+        }
+        if (progressPercent) {
+            progressPercent.textContent = percentage + '%';
+        }
+        if (progressText) {
+            progressText.textContent = count + ' of ' + requiredDocs.length + ' documents uploaded';
+        }
+
+        // Update required documents list
+        if (requiredList) {
+            requiredList.innerHTML = '';
+            requiredDocs.forEach(doc => {
+                const isUploaded = uploadedSet.has(doc.key);
+                const item = document.createElement('div');
+                item.className = 'doc-doc-item' + (isUploaded ? ' uploaded' : '');
+                item.innerHTML = `<i class="fa-solid ${doc.icon}"></i> ${doc.label}`;
+                requiredList.appendChild(item);
+            });
+        }
+    }
+
+    function documents_table(){
     function formatDate(isoString) {
     const date = new Date(isoString); // Convert ISO string to Date object
     const options = { 
@@ -53,6 +90,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 documnets.innerHTML = `<tr><td colspan="4">No documnets found</td></tr>`;
                 return;
             }
+
+            // Update progress bar with uploaded documents
+            updateProgressBar(data);
 
             data.forEach(p => {
                 const row = document.createElement("tr");
