@@ -1,27 +1,22 @@
 document.addEventListener("DOMContentLoaded", () => {
     const emp_id = localStorage.getItem('employee_id');
+    
+    // --- ENSURE THIS POINTS TO YOUR LIVE BACKEND ---
+    const API_BASE_URL = "http://127.0.0.1:8000";
 
     // 1. CONFIGURATION & STATE
-    fetch(`http://13.51.167.95:8000/api/employee/dashboard/${emp_id}/`)
+    fetch(`${API_BASE_URL}/api/employee/dashboard/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
-            // querySelectorAll updates BOTH the sidebar AND the top-right dropdown menu
-            document.querySelectorAll("#pname").forEach(el => {
-                el.innerText = data.name || "Employee";
-            });
-            document.querySelectorAll("#role").forEach(el => {
-                el.innerText = data.role || "Employee";
-            });
-            document.querySelectorAll("#employee_id").forEach(el => {
-                el.innerText = data.employee_id || emp_id;
-            });
+            document.querySelectorAll("#pname").forEach(el => el.innerText = data.name || "Employee");
+            document.querySelectorAll("#role").forEach(el => el.innerText = data.role || "Employee");
+            document.querySelectorAll("#employee_id").forEach(el => el.innerText = data.employee_id || emp_id);
         }).catch(err => console.error("Profile Fetch Error:", err));
 
-    const SHIFT_START_HR = 10; // 10:00 AM
-    const SHIFT_END_HR = 19;   // 07:00 PM
-    const TOTAL_HOURS = SHIFT_END_HR - SHIFT_START_HR; // 9 hours
+    const SHIFT_START_HR = 10; 
+    const SHIFT_END_HR = 19;   
+    const TOTAL_HOURS = SHIFT_END_HR - SHIFT_START_HR; 
     
-    // PERSISTENCE KEYS
     const todayStr = new Date().toLocaleDateString('en-CA');
     const STORAGE_KEY_HISTORY = "att_history_log";
     const TIMELINE_KEY = `timeline_${emp_id}_${todayStr}`;
@@ -29,19 +24,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const BREAK_LOGS_KEY = `break_logs_${emp_id}_${todayStr}`;
     const USAGE_KEY = `break_usage_${emp_id}_${todayStr}`;
 
-    // State Variables
     let workTimerInterval = null;
     let breakTimerInterval = null;
-
     let workStartTime = null;
     let breakStartTime = null;
     let punchInTimeStr = null;
     let totalWorkMs = 0;
-    
     let baselineWeeklyMs = 0;
     let baselineMonthlyMs = 0;
 
-    // Load Persisted Data
     const LIMITS = { lunch: 45 * 60, normal: 15 * 60 };
     let usage = JSON.parse(localStorage.getItem(USAGE_KEY));
     if (!usage || typeof usage !== 'object') usage = { lunch: 0, normal: 0 };
@@ -49,7 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
     usage.normal = parseInt(usage.normal) || 0;
     
     let totalBreakMs = (usage.lunch + usage.normal) * 1000;
-    
     let timelineSessions = JSON.parse(localStorage.getItem(TIMELINE_KEY)) || [];
     let dailyLogs = JSON.parse(localStorage.getItem(DAILY_LOGS_KEY)) || [];
     let breakLogs = JSON.parse(localStorage.getItem(BREAK_LOGS_KEY)) || [];
@@ -59,9 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentBreakType = "lunch"; 
     let editingDateKey = null; 
 
-    // ==========================================
     // 2. DYNAMIC BREAK CIRCLE INJECTION
-    // ==========================================
     const breakWrap = document.querySelector(".bm-timer-circle-wrap");
     if (breakWrap) {
         breakWrap.innerHTML = `
@@ -76,9 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 
-    // ==========================================
     // 3. DOM ELEMENTS
-    // ==========================================
     const punchBtn = document.getElementById("punchBtn");
     const timerDisplay = document.getElementById("timerDisplay");
     const productionDisplay = document.getElementById("productionDisplay");
@@ -128,9 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentDate = new Date(); 
     const attendanceCache = {};
 
-    // ==========================================
     // 4. HELPER FUNCTIONS
-    // ==========================================
     function formatTime(ms) {
         const totalSeconds = Math.floor(ms / 1000);
         const h = Math.floor(totalSeconds / 3600);
@@ -190,7 +174,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updateMetricsUI(displayMs) {
         if(timerDisplay) timerDisplay.innerText = formatTime(displayMs);
-        
         const formattedActiveTime = formatHrMin(displayMs);
 
         if(productionDisplay) productionDisplay.innerText = `Active : ${formattedActiveTime}`;
@@ -277,9 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return total;
     }
 
-    // ==========================================
     // 5. WORK TIMER LOGIC
-    // ==========================================
     function startWorkTimer() {
         if (workTimerInterval) clearInterval(workTimerInterval);
         isWorking = true;
@@ -310,9 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
         isWorking = false;
     }
 
-    // ==========================================
-    // 6. BREAK TIMER LOGIC 
-    // ==========================================
+    // 6. BREAK TIMER LOGIC
     function updateBreakCircleUI(additionalSeconds = 0) {
         let type = "lunch";
         if (bmEls.breakSelect) type = bmEls.breakSelect.value.toLowerCase().trim();
@@ -352,115 +331,169 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // BREAK IN
     if (bmEls.btnIn) {
-        bmEls.btnIn.addEventListener("click", (e) => {
-            e.preventDefault(); // <-- PREVENTS PAGE RELOAD
+        bmEls.btnIn.addEventListener("click", async (e) => {
+            e.preventDefault(); 
             
             if (!isWorking) return alert("You must be actively punched in to start a break.");
             
-            pauseWorkTimer();
-            statusMsg.innerHTML = `<i class="fa-solid fa-mug-hot"></i> On Break...`;
-            statusMsg.style.color = "#FF5B1E";
-            isOnBreak = true;
-            breakStartTime = Date.now();
+            const ogText = bmEls.btnIn.innerHTML;
+            bmEls.btnIn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            bmEls.btnIn.disabled = true;
+
             currentBreakType = bmEls.breakSelect.value.toLowerCase().trim();
 
-            fetch("http://13.51.167.95:8000/api/employee-break/start/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: emp_id, break_type: currentBreakType })
-            }).catch(err => console.error("Break Start API Error:", err));
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/employee-break/start/`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: emp_id, break_type: currentBreakType })
+                });
 
-            timelineSessions.push({ type: 'break', start: breakStartTime, end: null });
-            saveTimelineSession();
+                if (!res.ok) {
+                    const errData = await res.json().catch(()=>({}));
+                    throw new Error(errData.error || "Failed to start break on server.");
+                }
 
-            const typeLabel = currentBreakType === "lunch" ? "Lunch Break" : "Normal Break";
-            bmEls.btnIn.style.display = "none";
-            bmEls.btnOut.style.display = "flex";
-            bmEls.breakSelect.disabled = true;
-            punchBtn.disabled = true;
-            bmEls.statusBadge.textContent = `On ${typeLabel}`;
-            bmEls.statusBadge.className = "bm-badge bm-badge-primary";
-            addMainLog("Break Started", typeLabel);
+                pauseWorkTimer();
+                statusMsg.innerHTML = `<i class="fa-solid fa-mug-hot"></i> On Break...`;
+                statusMsg.style.color = "#FF5B1E";
+                isOnBreak = true;
+                breakStartTime = Date.now();
 
-            if (breakTimerInterval) clearInterval(breakTimerInterval);
-            breakTimerInterval = setInterval(() => {
-                const currentBreakMs = Date.now() - breakStartTime;
-                const diffInSeconds = Math.floor(currentBreakMs / 1000);
-                updateBreakCircleUI(diffInSeconds); 
-                drawTimeline();
-            }, 1000);
+                timelineSessions.push({ type: 'break', start: breakStartTime, end: null });
+                saveTimelineSession();
+
+                const typeLabel = currentBreakType === "lunch" ? "Lunch Break" : "Normal Break";
+                bmEls.btnIn.style.display = "none";
+                bmEls.btnOut.style.display = "flex";
+                bmEls.breakSelect.disabled = true;
+                punchBtn.disabled = true;
+                bmEls.statusBadge.textContent = `On ${typeLabel}`;
+                bmEls.statusBadge.className = "bm-badge bm-badge-primary";
+                addMainLog("Break Started", typeLabel);
+
+                if (breakTimerInterval) clearInterval(breakTimerInterval);
+                breakTimerInterval = setInterval(() => {
+                    const currentBreakMs = Date.now() - breakStartTime;
+                    const diffInSeconds = Math.floor(currentBreakMs / 1000);
+                    updateBreakCircleUI(diffInSeconds); 
+                    drawTimeline();
+                }, 1000);
+
+            } catch (err) {
+                console.error("Break Start Error:", err);
+                
+                // SMART RECOVERY LOGIC
+                if (err.message.includes("Already on an active break")) {
+                    isOnBreak = true;
+                    currentBreakType = bmEls.breakSelect.value.toLowerCase().trim();
+                    breakStartTime = Date.now(); 
+                    
+                    bmEls.btnIn.style.display = "none";
+                    bmEls.btnOut.style.display = "flex";
+                    bmEls.breakSelect.disabled = true;
+                    punchBtn.disabled = true;
+                    
+                    bmEls.statusBadge.textContent = "On Break (Recovered)";
+                    bmEls.statusBadge.className = "bm-badge bm-badge-primary";
+                    
+                    alert("We detected an active break from a previous session. Click 'Break Out' to close it!");
+                } else {
+                    alert(`Error: ${err.message}`);
+                }
+            } finally {
+                bmEls.btnIn.innerHTML = ogText;
+                bmEls.btnIn.disabled = false;
+            }
         });
     }
 
     // BREAK OUT
     if (bmEls.btnOut) {
-        bmEls.btnOut.addEventListener("click", (e) => {
-            e.preventDefault(); // <-- PREVENTS PAGE RELOAD
+        bmEls.btnOut.addEventListener("click", async (e) => {
+            e.preventDefault(); 
             
-            if (!isOnBreak) return; // Prevent execution if not actually on a break
+            if (!isOnBreak) return; 
             
-            fetch("http://13.51.167.95:8000/api/employee-break/end/", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: emp_id, break_type: currentBreakType })
-            }).catch(err => console.error("Break End API Error:", err));
+            const ogText = bmEls.btnOut.innerHTML;
+            bmEls.btnOut.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            bmEls.btnOut.disabled = true;
 
-            clearInterval(breakTimerInterval);
-            const endTime = Date.now();
-            const durationMs = endTime - breakStartTime;
-            const durationSec = Math.floor(durationMs / 1000);
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/employee-break/end/`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: emp_id, break_type: currentBreakType })
+                });
 
-            totalBreakMs += durationMs;
-            usage[currentBreakType] = (usage[currentBreakType] || 0) + durationSec;
-            localStorage.setItem(USAGE_KEY, JSON.stringify(usage));
-            
-            closeLastSession(endTime); 
-            isOnBreak = false;
-            
-            const savedBreakStartTime = breakStartTime; 
-            breakStartTime = null; 
-            workStartTime = Date.now(); 
-            
-            timelineSessions.push({ type: 'work', start: workStartTime, end: null });
-            saveTimelineSession();
+                if (!res.ok) {
+                    const errData = await res.json().catch(()=>({}));
+                    throw new Error(errData.error || "Failed to end break on server.");
+                }
 
-            startWorkTimer(); 
-            addMainLog("Break Ended", "Resumed Work");
+                clearInterval(breakTimerInterval);
+                const endTime = Date.now();
+                const durationMs = endTime - breakStartTime;
+                const durationSec = Math.floor(durationMs / 1000);
 
-            bmEls.btnIn.style.display = "flex";
-            bmEls.btnOut.style.display = "none";
-            bmEls.breakSelect.disabled = false;
-            punchBtn.disabled = false;
+                totalBreakMs += durationMs;
+                usage[currentBreakType] = (usage[currentBreakType] || 0) + durationSec;
+                localStorage.setItem(USAGE_KEY, JSON.stringify(usage));
+                
+                closeLastSession(endTime); 
+                isOnBreak = false;
+                breakStartTime = null; 
+                
+                workStartTime = Date.now(); 
+                
+                timelineSessions.push({ type: 'work', start: workStartTime, end: null });
+                saveTimelineSession();
 
-            bmEls.statusBadge.textContent = "Not Active";
-            bmEls.statusBadge.className = "bm-badge bm-badge-light";
+                startWorkTimer(); 
+                addMainLog("Break Ended", "Resumed Work");
 
-            updateBreakCircleUI(0);
-            bmAddToHistoryLog(currentBreakType, savedBreakStartTime, endTime, durationSec);
-            bmUpdateProgressStats();
+                bmEls.btnIn.style.display = "flex";
+                bmEls.btnOut.style.display = "none";
+                bmEls.breakSelect.disabled = false;
+                punchBtn.disabled = false;
+
+                bmEls.statusBadge.textContent = "Not Active";
+                bmEls.statusBadge.className = "bm-badge bm-badge-light";
+
+                updateBreakCircleUI(0);
+                bmAddToHistoryLog(currentBreakType, endTime - durationMs, endTime, durationSec);
+                bmUpdateProgressStats();
+
+            } catch (err) {
+                console.error("Break End Error:", err);
+                alert(`Error: ${err.message}`);
+            } finally {
+                bmEls.btnOut.innerHTML = ogText;
+                bmEls.btnOut.disabled = false;
+            }
         });
     }
 
-    // ==========================================
     // 7. MAIN PUNCH BUTTON LOGIC
-    // ==========================================
     if (punchBtn) {
         punchBtn.addEventListener("click", (e) => {
-            e.preventDefault(); // <-- PREVENTS PAGE RELOAD
-
+            e.preventDefault(); 
             const nowStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
             if (!isWorking && !isOnBreak && totalWorkMs === 0) {
-               fetch("http://13.51.167.95:8000/api/employee-attendence/create/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: emp_id })
-})
-.then(res => res.json())
-.then(() => {
-    isWorking = true;   // 🔴 IMPORTANT FIX
-})
-.catch(err => console.error("Punch In Error:", err));
+               fetch(`${API_BASE_URL}/api/employee-attendence/create/`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: emp_id })
+                })
+                .then(res => res.json())
+                .then(() => {
+                    isWorking = true;   
+                    // Refresh the page immediately after successfully punching in
+                    window.location.reload();
+                })
+                .catch(err => console.error("Punch In Error:", err));
+                
                 workStartTime = Date.now();
                 punchInTimeStr = nowStr;
                 totalWorkMs = 0; 
@@ -471,7 +504,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 addMainLog("Punch In", "Shift Started");
             }
             else if (isWorking) {
-                fetch("http://13.51.167.95:8000/api/employee-attendence/checkout/", {
+                fetch(`${API_BASE_URL}/api/employee-attendence/checkout/`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id: emp_id })
@@ -497,6 +530,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // PAGE LOAD & SYNC
     window.addEventListener("load", () => {
         loadDailyLogs();
         loadBreakLogs();
@@ -504,26 +538,66 @@ document.addEventListener("DOMContentLoaded", () => {
         updateBreakCircleUI(0); 
         loadHistoryTable(); 
 
-        fetch(`http://13.51.167.95:8000/api/attendence-status/${emp_id}/`)
+        fetch(`${API_BASE_URL}/api/attendence-status/${emp_id}/`)
         .then(res => res.json())
         .then(data => {
-            if (data.status === "punched_in") {
+            const isPunchedIn = data.status === "punched_in";
+            const isOnActiveBreak = data.break_info && data.break_info.is_on_break;
+
+            if (isPunchedIn) {
                 punchBtn.innerText = "Punch Out";
                 punchBtn.classList.add("mode-out");
-                isWorking = true;
                 
-                if (timelineSessions.length > 0) {
-                    let lastSession = timelineSessions[timelineSessions.length - 1];
-                    if (lastSession.type === 'work' && !lastSession.end) workStartTime = lastSession.start;
-                    else workStartTime = new Date(data.checkin).getTime();
+                if (isOnActiveBreak) {
+                    isWorking = false;
+                    isOnBreak = true;
+                    
                     totalWorkMs = calculateTotalWorkFromTimeline();
+                    updateMetricsUI(totalWorkMs);
+                    
+                    currentBreakType = data.break_info.break_type;
+                    breakStartTime = new Date(data.break_info.start_time).getTime();
+                    
+                    statusMsg.innerHTML = `<i class="fa-solid fa-mug-hot"></i> On Break...`;
+                    statusMsg.style.color = "#FF5B1E";
+                    
+                    bmEls.btnIn.style.display = "none";
+                    bmEls.btnOut.style.display = "flex";
+                    bmEls.breakSelect.value = currentBreakType;
+                    bmEls.breakSelect.disabled = true;
+                    punchBtn.disabled = true;
+                    
+                    const typeLabel = currentBreakType === "lunch" ? "Lunch Break" : "Normal Break";
+                    bmEls.statusBadge.textContent = `On ${typeLabel}`;
+                    bmEls.statusBadge.className = "bm-badge bm-badge-primary";
+                    
+                    if (breakTimerInterval) clearInterval(breakTimerInterval);
+                    breakTimerInterval = setInterval(() => {
+                        const currentBreakMs = Date.now() - breakStartTime;
+                        updateBreakCircleUI(Math.floor(currentBreakMs / 1000));
+                        drawTimeline();
+                    }, 1000);
+
                 } else {
-                    workStartTime = new Date(data.checkin).getTime();
-                    totalWorkMs = 0;
-                    timelineSessions.push({ type: 'work', start: workStartTime, end: null });
-                    saveTimelineSession();
+                    isWorking = true;
+                    isOnBreak = false;
+                    
+                    if (timelineSessions.length > 0) {
+                        let lastSession = timelineSessions[timelineSessions.length - 1];
+                        if (lastSession.type === 'work' && !lastSession.end) {
+                            workStartTime = lastSession.start;
+                        } else {
+                            workStartTime = Date.now();
+                        }
+                        totalWorkMs = calculateTotalWorkFromTimeline();
+                    } else {
+                        workStartTime = new Date(data.checkin).getTime();
+                        totalWorkMs = 0;
+                        timelineSessions.push({ type: 'work', start: workStartTime, end: null });
+                        saveTimelineSession();
+                    }
+                    startWorkTimer();
                 }
-                startWorkTimer();
 
             } else if (data.status === "punched_out") {
                 punchBtn.innerText = "Shift Completed";
@@ -537,6 +611,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 totalWorkMs = calculateTotalWorkFromTimeline();
                 updateMetricsUI(totalWorkMs);
                 drawTimeline(); 
+
             } else {
                 punchBtn.innerText = "Punch In";
                 isWorking = false;
@@ -562,9 +637,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(err => console.error("Status fetch error:", err));
     });
 
-    // ==========================================
     // 8. STATS & BREAK HISTORY HELPERS
-    // ==========================================
     function bmUpdateProgressStats() {
         const totalSec = (usage.lunch || 0) + (usage.normal || 0);
         
@@ -642,9 +715,7 @@ document.addEventListener("DOMContentLoaded", () => {
         bmEls.logTable.prepend(row);
     }
 
-    // ==========================================
     // 9. CALENDAR, MODAL & HISTORY LOGIC 
-    // ==========================================
     function saveCalendarHistory(status, inTime, outTime) {
         const todayKey = new Date().toLocaleDateString('en-CA');
         let history = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY)) || {};
@@ -710,9 +781,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const res = await fetch(`http://13.51.167.95:8000/api/employee-attendence-history/${emp_id}/`);
+            const res = await fetch(`${API_BASE_URL}/api/employee-attendence-history/${emp_id}/`);
             const data = await res.json();
-            const reqRes = await fetch(`http://13.51.167.95:8000/api/admin/attendance-requests/`);
+            const reqRes = await fetch(`${API_BASE_URL}/api/admin/attendance-requests/`);
             const allRequests = await reqRes.json();
             
             baselineWeeklyMs = 0;
@@ -802,9 +873,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (calEls.bottomCloseBtn) calEls.bottomCloseBtn.addEventListener("click", closeHistoryModal);
     if (calEls.modal) calEls.modal.addEventListener("click", (e) => { if (e.target === calEls.modal) closeHistoryModal(); });
 
-    // ==========================================
     // 10. EDIT MODAL LOGIC
-    // ==========================================
     document.addEventListener("click", function (e) {
         const btn = e.target.closest(".btn-edit-row");
         if (!btn) return;
@@ -835,7 +904,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const saveEditBtn = document.getElementById("saveEditBtn");
     if (saveEditBtn) {
         saveEditBtn.addEventListener("click", (e) => {
-            e.preventDefault(); // <-- PREVENTS PAGE RELOAD
+            e.preventDefault(); 
             if (!editingDateKey) return;
             const inTimeInput = document.getElementById("editInTime");
             const outTimeInput = document.getElementById("editOutTime");
@@ -851,7 +920,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 reason: reasonInput.value
             };
 
-            fetch(`http://13.51.167.95:8000/api/attendance-request/create/`, {
+            fetch(`${API_BASE_URL}/api/attendance-request/create/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(updatePayload)
@@ -883,9 +952,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     renderCalendar();
 
-    // ==========================================
-    // 11. CSS INJECTION (FIXED TIMELINE CSS)
-    // ==========================================
+    // 11. CSS INJECTION
     const style = document.createElement('style');
     style.innerHTML = `
         .bm-timer-circle-wrap { position: relative; width: 180px; height: 180px; margin: 0 auto; display: flex; justify-content: center; align-items: center; }
